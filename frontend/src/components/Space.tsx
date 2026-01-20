@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
+import type { SpaceLevel } from '../store/gameStore';
 
 interface SpaceProps {
     position: [number, number, number];
@@ -8,12 +9,12 @@ interface SpaceProps {
     name: string;
     isCorner: boolean;
     price?: number;
-    rent?: number;
-    level?: number;
+    level?: SpaceLevel;
+    isImportant?: boolean;
     ownerColor?: string | null;
 }
 
-export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, price, rent, level, ownerColor }) => {
+export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, price, level, isImportant, ownerColor }) => {
     const meshRef = useRef<THREE.Mesh>(null);
 
     const width = 2;
@@ -44,7 +45,7 @@ export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, p
             </Text>
 
             {/* Price or Rent */}
-            {(price !== undefined || rent !== undefined) && (
+            {price !== undefined && (
                 <Text
                     position={[0, height / 2 + 0.02, 0.4]}
                     rotation={[-Math.PI / 2, 0, 0]}
@@ -53,21 +54,21 @@ export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, p
                     anchorX="center"
                     anchorY="middle"
                 >
-                    {ownerColor ? `Rent: $${(rent || 0) * (level || 1)}` : `$${price}`}
+                    {ownerColor ? `Rent: $${Math.floor(price * 0.5)}` : `$${price}`}
                 </Text>
             )}
 
             {/* Level Indicator */}
-            {level !== undefined && level > 1 && (
+            {level && level !== 'Corner' && (
                 <Text
                     position={[0, height / 2 + 0.02, 0.7]}
                     rotation={[-Math.PI / 2, 0, 0]}
                     fontSize={0.15}
-                    color="#FFD700"
+                    color={isImportant ? "#FFD700" : "white"}
                     anchorX="center"
                     anchorY="middle"
                 >
-                    Lvl {level}
+                    {level} {isImportant ? '★' : ''}
                 </Text>
             )}
 

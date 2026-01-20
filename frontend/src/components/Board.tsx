@@ -39,8 +39,8 @@ export const Board: React.FC = () => {
                         name={space.name}
                         isCorner={space.type === 'corner'}
                         price={space.price}
-                        rent={space.rent}
                         level={space.level}
+                        isImportant={space.isImportant}
                         ownerColor={owner?.color}
                     />
                 );
@@ -49,7 +49,7 @@ export const Board: React.FC = () => {
             {/* Center Decoration */}
             <mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <planeGeometry args={[18, 18]} />
-                <meshStandardMaterial color="#333" />
+                <meshStandardMaterial color="#222" />
             </mesh>
 
             {/* Players */}

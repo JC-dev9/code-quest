@@ -14,18 +14,41 @@ app.get('/gamestate', (req, res) => {
     res.json(gameState.getState());
 });
 
+app.post('/api/join', (req, res) => {
+    const { clientId } = req.body;
+    const playerId = gameState.joinGame(clientId);
+    res.json({ playerId, state: gameState.getState() });
+});
+
 app.post('/api/roll', (req, res) => {
-    gameState.rollDice();
+    const clientId = req.headers['client-id'] as string;
+    gameState.rollDice(clientId);
     res.json(gameState.getState());
 });
 
-app.post('/api/buy', (req, res) => {
-    gameState.buyProperty();
+app.post('/api/request-purchase', (req, res) => {
+    const clientId = req.headers['client-id'] as string;
+    gameState.requestPurchase(clientId);
+    res.json(gameState.getState());
+});
+
+app.post('/api/answer', (req, res) => {
+    const { optionIndex } = req.body;
+    const clientId = req.headers['client-id'] as string;
+    gameState.answerQuestion(clientId, optionIndex);
+    res.json(gameState.getState());
+});
+
+app.post('/api/sell', (req, res) => {
+    const { propertyId } = req.body;
+    const clientId = req.headers['client-id'] as string;
+    gameState.sellProperty(clientId, propertyId);
     res.json(gameState.getState());
 });
 
 app.post('/api/next-turn', (req, res) => {
-    gameState.nextTurn();
+    const clientId = req.headers['client-id'] as string;
+    gameState.nextTurn(clientId);
     res.json(gameState.getState());
 });
 
