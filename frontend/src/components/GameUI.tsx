@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { Dices } from 'lucide-react';
 
 export const GameUI: React.FC = () => {
-    const { currentPlayerIndex, players, diceValue, rollDice, isRolling, nextTurn } = useGameStore();
+    const { currentPlayerIndex, players, diceValue, rollDice, isRolling, nextTurn, buyProperty, boardConfig } = useGameStore();
 
     const currentPlayer = players[currentPlayerIndex];
 
@@ -29,6 +29,11 @@ export const GameUI: React.FC = () => {
                         />
                         <span className="font-bold">Player {currentPlayer.id}</span>
                     </div>
+                    <div className="mt-2 pt-2 border-t border-white/10">
+                        <p className="text-xl font-black text-green-400">
+                            ${currentPlayer.money}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -38,12 +43,32 @@ export const GameUI: React.FC = () => {
                     <div className="bg-white/90 p-8 rounded-2xl shadow-2xl flex flex-col items-center animate-bounce-short">
                         <Dices size={64} className="text-indigo-600 mb-2" />
                         <span className="text-4xl font-black text-indigo-900">{diceValue}</span>
-                        <button
-                            onClick={nextTurn}
-                            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                        >
-                            End Turn
-                        </button>
+
+                        {(() => {
+                            const currentSpace = boardConfig[currentPlayer.position];
+                            const canBuy = currentSpace?.type === 'property' &&
+                                currentSpace.ownerId === null &&
+                                currentPlayer.money >= (currentSpace.price || 0);
+
+                            return (
+                                <div className="flex flex-col gap-2 mt-4 w-full">
+                                    {canBuy && (
+                                        <button
+                                            onClick={buyProperty}
+                                            className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition shadow-lg shadow-green-900/20 pointer-events-auto"
+                                        >
+                                            Buy {currentSpace.name} (${currentSpace.price})
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={nextTurn}
+                                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition pointer-events-auto"
+                                    >
+                                        End Turn
+                                    </button>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             )}

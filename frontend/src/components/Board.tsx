@@ -29,15 +29,22 @@ export const Board: React.FC = () => {
     return (
         <group>
             {/* Board Spaces */}
-            {boardConfig.map((space) => (
-                <Space
-                    key={space.id}
-                    position={getPosition(space.id)}
-                    color={space.color}
-                    name={space.name}
-                    isCorner={space.type === 'corner'}
-                />
-            ))}
+            {boardConfig.map((space) => {
+                const owner = space.ownerId ? players.find(p => p.id === space.ownerId) : null;
+                return (
+                    <Space
+                        key={space.id}
+                        position={getPosition(space.id)}
+                        color={space.color}
+                        name={space.name}
+                        isCorner={space.type === 'corner'}
+                        price={space.price}
+                        rent={space.rent}
+                        level={space.level}
+                        ownerColor={owner?.color}
+                    />
+                );
+            })}
 
             {/* Center Decoration */}
             <mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>

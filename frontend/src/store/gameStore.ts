@@ -4,6 +4,8 @@ export type Player = {
     id: number;
     color: string;
     position: number;
+    money: number;
+    properties: number[];
 };
 
 export type SpaceData = {
@@ -11,6 +13,11 @@ export type SpaceData = {
     name: string;
     color: string;
     type: 'property' | 'corner';
+    price?: number;
+    rent?: number;
+    level?: number;
+    ownerId?: number | null;
+    imageUrl?: string;
 };
 
 interface GameState {
@@ -23,6 +30,7 @@ interface GameState {
     fetchState: () => Promise<void>;
     rollDice: () => Promise<void>;
     nextTurn: () => Promise<void>;
+    buyProperty: () => Promise<void>;
 }
 
 const API_URL = 'http://localhost:3000';
@@ -67,6 +75,16 @@ export const useGameStore = create<GameState>((set) => ({
             set(data);
         } catch (error) {
             console.error("Failed to advance turn:", error);
+        }
+    },
+
+    buyProperty: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/buy`, { method: 'POST' });
+            const data = await res.json();
+            set(data);
+        } catch (error) {
+            console.error("Failed to buy property:", error);
         }
     },
 }));

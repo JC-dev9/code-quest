@@ -19,6 +19,11 @@ app.post('/api/roll', (req, res) => {
     res.json(gameState.getState());
 });
 
+app.post('/api/buy', (req, res) => {
+    gameState.buyProperty();
+    res.json(gameState.getState());
+});
+
 app.post('/api/next-turn', (req, res) => {
     gameState.nextTurn();
     res.json(gameState.getState());
