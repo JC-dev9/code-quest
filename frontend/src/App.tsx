@@ -1,18 +1,62 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Sky } from '@react-three/drei';
 import { Board } from './components/Board';
 import { GameUI } from './components/GameUI';
+import { MainMenu } from './components/MainMenu';
+import { RoomLobby } from './components/RoomLobby';
 
-import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 
 function App() {
-  const { fetchState } = useGameStore();
+  const {
+    viewState,
+    roomCode,
+    isHost,
+    players,
+    isLoading,
+    error,
+    connectSocket,
+    disconnectSocket,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    startGame
+  } = useGameStore();
 
+  // Connect socket on mount
   useEffect(() => {
-    fetchState();
-  }, [fetchState]);
+    connectSocket();
+    return () => {
+      disconnectSocket();
+    };
+  }, [connectSocket, disconnectSocket]);
+
+  // Render based on view state
+  if (viewState === 'menu') {
+    return (
+      <MainMenu
+        onCreateRoom={createRoom}
+        onJoinRoom={joinRoom}
+        isLoading={isLoading}
+        error={error}
+      />
+    );
+  }
+
+  if (viewState === 'lobby') {
+    return (
+      <RoomLobby
+        roomCode={roomCode || ''}
+        players={players}
+        isHost={isHost}
+        onStartGame={startGame}
+        onLeaveRoom={leaveRoom}
+      />
+    );
+  }
+
+  // Game view
   return (
     <div className="w-full h-full relative bg-gray-900">
 

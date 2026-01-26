@@ -5,6 +5,7 @@ export type Player = {
     money: number;
     properties: number[]; // Array of space IDs
     clientId: string | null; // Associated client session
+    purchaseAttemptUsed: boolean; // Track if player already tried to purchase this turn
 };
 
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
@@ -60,8 +61,8 @@ export class GameState {
 
     constructor() {
         this.players = [
-            { id: 1, color: '#ff0000', position: 0, money: 500, properties: [], clientId: null },
-            { id: 2, color: '#0000ff', position: 0, money: 500, properties: [], clientId: null },
+            { id: 1, color: '#ff0000', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
+            { id: 2, color: '#0000ff', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
         ];
         this.currentPlayerIndex = 0;
         this.diceValue = null;
@@ -189,6 +190,10 @@ export class GameState {
     public requestPurchase(clientId: string) {
         if (!this.validateAction(clientId)) return false;
         const player = this.players[this.currentPlayerIndex];
+
+        // Check if player already used their purchase attempt
+        if (player.purchaseAttemptUsed) return false;
+
         const space = this.boardConfig[player.position];
 
         if (space.type === 'property' && space.ownerId === null && player.money >= (space.price || 0)) {
@@ -196,6 +201,10 @@ export class GameState {
             const available = this.questions.filter(q => q.level === space.level);
             this.currentQuestion = available[Math.floor(Math.random() * available.length)] || this.questions[0];
             this.pendingPurchaseId = space.id;
+
+            // Mark attempt as used
+            player.purchaseAttemptUsed = true;
+
             return true;
         }
         return false;
@@ -246,5 +255,8 @@ export class GameState {
         if (!this.validateAction(clientId)) return;
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.diceValue = null;
+
+        // Reset purchase attempt for the new current player
+        this.players[this.currentPlayerIndex].purchaseAttemptUsed = false;
     }
 }

@@ -6,14 +6,8 @@ export const GameUI: React.FC = () => {
     const {
         currentPlayerIndex, players, diceValue, rollDice, isRolling,
         nextTurn, requestPurchase, answerQuestion, boardConfig,
-        currentQuestion, localPlayerId, joinGame, startPolling, stopPolling
+        currentQuestion, localPlayerId
     } = useGameStore();
-
-    React.useEffect(() => {
-        joinGame();
-        startPolling();
-        return () => stopPolling();
-    }, [joinGame, startPolling, stopPolling]);
 
     const currentPlayer = players[currentPlayerIndex];
     const isMyTurn = localPlayerId === (currentPlayer?.id);
@@ -100,18 +94,27 @@ export const GameUI: React.FC = () => {
                             const currentSpace = boardConfig[currentPlayer.position];
                             const canPurchase = currentSpace?.type === 'property' &&
                                 currentSpace.ownerId === null &&
-                                currentPlayer.money >= (currentSpace.price || 0);
+                                currentPlayer.money >= (currentSpace.price || 0) &&
+                                !currentPlayer.purchaseAttemptUsed;
 
                             return (
                                 <>
-                                    {canPurchase && (
-                                        <button
-                                            onClick={requestPurchase}
-                                            disabled={!isMyTurn}
-                                            className={`px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-black text-lg transition-all ${isMyTurn ? 'hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105' : 'opacity-50 cursor-not-allowed'}`}
-                                        >
-                                            COMPRAR {currentSpace.name.toUpperCase()} ({currentSpace.price} DG)
-                                        </button>
+                                    {currentSpace?.type === 'property' && currentSpace.ownerId === null && (
+                                        <>
+                                            {currentPlayer.purchaseAttemptUsed ? (
+                                                <div className="px-8 py-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-2xl font-bold text-center">
+                                                    ❌ Tentativa de compra já utilizada
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={requestPurchase}
+                                                    disabled={!isMyTurn || !canPurchase}
+                                                    className={`px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-black text-lg transition-all ${isMyTurn && canPurchase ? 'hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105' : 'opacity-50 cursor-not-allowed'}`}
+                                                >
+                                                    COMPRAR {currentSpace.name.toUpperCase()} ({currentSpace.price} DG)
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                     <button
                                         onClick={nextTurn}

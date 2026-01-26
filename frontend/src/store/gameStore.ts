@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { io, Socket } from 'socket.io-client';
 
 export type Player = {
     id: number;
@@ -6,6 +7,7 @@ export type Player = {
     position: number;
     money: number;
     properties: number[];
+    purchaseAttemptUsed: boolean;
 };
 
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
@@ -29,7 +31,17 @@ export interface Question {
     level: SpaceLevel;
 }
 
+type ViewState = 'menu' | 'lobby' | 'game';
+
 interface GameState {
+    // View state
+    viewState: ViewState;
+
+    // Room state
+    roomCode: string | null;
+    isHost: boolean;
+
+    // Game state
     players: Player[];
     currentPlayerIndex: number;
     localPlayerId: number | null;
@@ -39,34 +51,32 @@ interface GameState {
     currentQuestion: Question | null;
     pendingPurchaseId: number | null;
 
-    fetchState: () => Promise<void>;
-    joinGame: () => Promise<void>;
+    // Connection state
+    socket: Socket | null;
+    isLoading: boolean;
+    error: string | null;
+
+    // Actions
+    connectSocket: () => void;
+    disconnectSocket: () => void;
+    createRoom: () => void;
+    joinRoom: (code: string) => void;
+    leaveRoom: () => void;
+    startGame: () => void;
     rollDice: () => Promise<void>;
     nextTurn: () => Promise<void>;
     requestPurchase: () => Promise<void>;
     answerQuestion: (index: number) => Promise<void>;
     sellProperty: (id: number) => Promise<void>;
-    startPolling: () => void;
-    stopPolling: () => void;
 }
-
-const getClientId = () => {
-    let id = localStorage.getItem('codequest_client_id');
-    if (!id) {
-        id = Math.random().toString(36).substring(2, 15);
-        localStorage.setItem('codequest_client_id', id);
-    }
-    return id;
-};
-
-const API_HEADERS = () => ({
-    'client-id': getClientId(),
-    'Content-Type': 'application/json'
-});
 
 const API_URL = 'http://localhost:3000';
 
-export const useGameStore = create<GameState>((set) => ({
+export const useGameStore = create<GameState>((set, get) => ({
+    // Initial state
+    viewState: 'menu',
+    roomCode: null,
+    isHost: false,
     players: [],
     currentPlayerIndex: 0,
     localPlayerId: null,
@@ -75,120 +85,153 @@ export const useGameStore = create<GameState>((set) => ({
     isRolling: false,
     currentQuestion: null,
     pendingPurchaseId: null,
+    socket: null,
+    isLoading: false,
+    error: null,
 
-    fetchState: async () => {
-        try {
-            const res = await fetch(`${API_URL}/gamestate`);
-            const data = await res.json();
-            set(data);
-        } catch (error) {
-            console.error("Failed to fetch game state:", error);
+    connectSocket: () => {
+        const socket = io(API_URL);
+
+        socket.on('connect', () => {
+            console.log('🔌 Connected to server');
+        });
+
+        socket.on('room-created', ({ code, isHost, gameState }) => {
+            console.log('✅ Room created:', code);
+            set({
+                roomCode: code,
+                isHost,
+                viewState: 'lobby',
+                isLoading: false,
+                error: null,
+                ...gameState
+            });
+        });
+
+        socket.on('room-joined', ({ code, isHost, playerId, gameState }) => {
+            console.log('✅ Room joined:', code);
+            set({
+                roomCode: code,
+                isHost,
+                localPlayerId: playerId,
+                viewState: 'lobby',
+                isLoading: false,
+                error: null,
+                ...gameState
+            });
+        });
+
+        socket.on('game-state-updated', (gameState) => {
+            console.log('🔄 Game state updated');
+            set({ ...gameState });
+        });
+
+        socket.on('error', ({ message }) => {
+            console.error('❌ Error:', message);
+            set({ error: message, isLoading: false });
+        });
+
+        socket.on('player-disconnected', ({ socketId }) => {
+            console.log('👋 Player disconnected:', socketId);
+            // Could show a notification here
+        });
+
+        socket.on('disconnect', () => {
+            console.log('🔌 Disconnected from server');
+            set({
+                viewState: 'menu',
+                roomCode: null,
+                error: 'Desconectado do servidor'
+            });
+        });
+
+        set({ socket });
+    },
+
+    disconnectSocket: () => {
+        const { socket } = get();
+        if (socket) {
+            socket.disconnect();
+            set({ socket: null });
         }
     },
 
-    joinGame: async () => {
-        try {
-            const res = await fetch(`${API_URL}/api/join`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clientId: getClientId() })
-            });
-            const { playerId, state } = await res.json();
-            set({ ...state, localPlayerId: playerId });
-        } catch (error) {
-            console.error("Failed to join game:", error);
-        }
+    createRoom: () => {
+        const { socket } = get();
+        if (!socket) return;
+
+        set({ isLoading: true, error: null });
+        socket.emit('create-room');
+    },
+
+    joinRoom: (code: string) => {
+        const { socket } = get();
+        if (!socket) return;
+
+        set({ isLoading: true, error: null });
+        socket.emit('join-room', code);
+    },
+
+    leaveRoom: () => {
+        set({
+            viewState: 'menu',
+            roomCode: null,
+            isHost: false,
+            localPlayerId: null,
+            players: [],
+            error: null
+        });
+    },
+
+    startGame: () => {
+        const { isHost } = get();
+        if (!isHost) return;
+
+        set({ viewState: 'game' });
     },
 
     rollDice: async () => {
+        const { socket } = get();
+        if (!socket) return;
+
         set({ isRolling: true });
 
         // Simulate animation delay for UX
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        try {
-            const res = await fetch(`${API_URL}/api/roll`, {
-                method: 'POST',
-                headers: API_HEADERS()
-            });
-            const data = await res.json();
-            set({ ...data, isRolling: false });
-        } catch (error) {
-            console.error("Failed to roll dice:", error);
+        socket.emit('roll-dice');
+
+        // The isRolling will be reset by game-state-updated event
+        setTimeout(() => {
             set({ isRolling: false });
-        }
+        }, 1500);
     },
 
     nextTurn: async () => {
-        try {
-            const res = await fetch(`${API_URL}/api/next-turn`, {
-                method: 'POST',
-                headers: API_HEADERS()
-            });
-            const data = await res.json();
-            set(data);
-        } catch (error) {
-            console.error("Failed to advance turn:", error);
-        }
+        const { socket } = get();
+        if (!socket) return;
+
+        socket.emit('next-turn');
     },
 
     requestPurchase: async () => {
-        try {
-            const res = await fetch(`${API_URL}/api/request-purchase`, {
-                method: 'POST',
-                headers: API_HEADERS()
-            });
-            const data = await res.json();
-            set(data);
-        } catch (error) {
-            console.error("Failed to request purchase:", error);
-        }
+        const { socket } = get();
+        if (!socket) return;
+
+        socket.emit('request-purchase');
     },
 
     answerQuestion: async (index: number) => {
-        try {
-            const res = await fetch(`${API_URL}/api/answer`, {
-                method: 'POST',
-                headers: API_HEADERS(),
-                body: JSON.stringify({ optionIndex: index })
-            });
-            const data = await res.json();
-            set(data);
-        } catch (error) {
-            console.error("Failed to answer question:", error);
-        }
+        const { socket } = get();
+        if (!socket) return;
+
+        socket.emit('answer-question', index);
     },
 
     sellProperty: async (id: number) => {
-        try {
-            const res = await fetch(`${API_URL}/api/sell`, {
-                method: 'POST',
-                headers: API_HEADERS(),
-                body: JSON.stringify({ propertyId: id })
-            });
-            const data = await res.json();
-            set(data);
-        } catch (error) {
-            console.error("Failed to sell property:", error);
-        }
-    },
+        const { socket } = get();
+        if (!socket) return;
 
-    startPolling: () => {
-        const interval = setInterval(async () => {
-            // Only poll if not currently performing an action to avoid race conditions
-            const state = useGameStore.getState();
-            if (!state.isRolling && !state.currentQuestion) {
-                await state.fetchState();
-            }
-        }, 1000);
-        (useGameStore as any)._pollInterval = interval;
-    },
-
-    stopPolling: () => {
-        const interval = (useGameStore as any)._pollInterval;
-        if (interval) {
-            clearInterval(interval);
-            (useGameStore as any)._pollInterval = null;
-        }
+        socket.emit('sell-property', id);
     },
 }));
