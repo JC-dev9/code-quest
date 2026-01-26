@@ -15,8 +15,8 @@ class GameState {
             { level: 'Extremo', text: "Qual a complexidade do Big O de uma busca binária?", options: ["O(n)", "O(log n)", "O(n^2)"], correctIndex: 1 }
         ];
         this.players = [
-            { id: 1, color: '#ff0000', position: 0, money: 500, properties: [], clientId: null },
-            { id: 2, color: '#0000ff', position: 0, money: 500, properties: [], clientId: null },
+            { id: 1, color: '#ff0000', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
+            { id: 2, color: '#0000ff', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
         ];
         this.currentPlayerIndex = 0;
         this.diceValue = null;
@@ -124,13 +124,24 @@ class GameState {
     }
     validateAction(clientId) {
         const currentPlayer = this.players[this.currentPlayerIndex];
-        return currentPlayer.clientId === clientId;
+        const isValid = currentPlayer.clientId === clientId;
+        console.log(`[Validate] Player ${this.currentPlayerIndex + 1} (${currentPlayer.clientId}) vs Requester (${clientId}) -> ${isValid}`);
+        return isValid;
     }
     rollDice(clientId) {
-        if (!this.validateAction(clientId))
+        console.log(`[Roll] Request from ${clientId}`);
+        if (!this.validateAction(clientId)) {
+            console.log(`[Roll] Failed validation`);
             return;
-        if (this.isRolling || this.currentQuestion)
+        }
+        if (this.isRolling) {
+            console.log(`[Roll] Failed: Already rolling`);
             return;
+        }
+        if (this.currentQuestion) {
+            console.log(`[Roll] Failed: Must answer question first`);
+            return;
+        }
         this.isRolling = true;
         const d1 = Math.floor(Math.random() * 6) + 1;
         const d2 = Math.floor(Math.random() * 6) + 1;
@@ -159,12 +170,17 @@ class GameState {
         if (!this.validateAction(clientId))
             return false;
         const player = this.players[this.currentPlayerIndex];
+        // Check if player already used their purchase attempt
+        if (player.purchaseAttemptUsed)
+            return false;
         const space = this.boardConfig[player.position];
         if (space.type === 'property' && space.ownerId === null && player.money >= (space.price || 0)) {
             // Select a question of matching level
             const available = this.questions.filter(q => q.level === space.level);
             this.currentQuestion = available[Math.floor(Math.random() * available.length)] || this.questions[0];
             this.pendingPurchaseId = space.id;
+            // Mark attempt as used
+            player.purchaseAttemptUsed = true;
             return true;
         }
         return false;
@@ -209,6 +225,8 @@ class GameState {
             return;
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.diceValue = null;
+        // Reset purchase attempt for the new current player
+        this.players[this.currentPlayerIndex].purchaseAttemptUsed = false;
     }
 }
 exports.GameState = GameState;

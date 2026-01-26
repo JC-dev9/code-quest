@@ -145,6 +145,11 @@ export const useGameStore = create<GameState>((set, get) => ({
             });
         });
 
+        socket.on('game-started', () => {
+             console.log('🚀 Game started!');
+             set({ viewState: 'game' });
+        });
+
         set({ socket });
     },
 
@@ -184,10 +189,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     startGame: () => {
-        const { isHost } = get();
-        if (!isHost) return;
+        const { socket, isHost } = get();
+        if (!socket || !isHost) return;
 
-        set({ viewState: 'game' });
+        socket.emit('start-game');
     },
 
     rollDice: async () => {

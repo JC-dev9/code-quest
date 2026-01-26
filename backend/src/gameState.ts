@@ -150,12 +150,25 @@ export class GameState {
 
     private validateAction(clientId: string): boolean {
         const currentPlayer = this.players[this.currentPlayerIndex];
-        return currentPlayer.clientId === clientId;
+        const isValid = currentPlayer.clientId === clientId;
+        console.log(`[Validate] Player ${this.currentPlayerIndex + 1} (${currentPlayer.clientId}) vs Requester (${clientId}) -> ${isValid}`);
+        return isValid;
     }
 
     public rollDice(clientId: string) {
-        if (!this.validateAction(clientId)) return;
-        if (this.isRolling || this.currentQuestion) return;
+        console.log(`[Roll] Request from ${clientId}`);
+        if (!this.validateAction(clientId)) {
+            console.log(`[Roll] Failed validation`);
+            return;
+        }
+        if (this.isRolling) {
+            console.log(`[Roll] Failed: Already rolling`);
+            return;
+        }
+        if (this.currentQuestion) {
+            console.log(`[Roll] Failed: Must answer question first`);
+            return;
+        }
 
         this.isRolling = true;
 
