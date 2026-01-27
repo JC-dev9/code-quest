@@ -245,3 +245,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         socket.emit('sell-property', id);
     },
 }));
+
+
+
+
+
+
