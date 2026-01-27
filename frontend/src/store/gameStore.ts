@@ -73,7 +73,7 @@ interface GameState {
     sellProperty: (id: number) => Promise<void>;
 }
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const useGameStore = create<GameState>((set, get) => ({
     // Initial state
@@ -245,9 +245,5 @@ export const useGameStore = create<GameState>((set, get) => ({
         socket.emit('sell-property', id);
     },
 }));
-
-
-
-
 
 

@@ -141,6 +141,8 @@ io.on('connection', (socket) => {
     });
 });
 
-httpServer.listen(port, () => {
-    console.log(`Bananapoly backend listening at http://localhost:${port}`);
+httpServer.listen(port, '0.0.0.0', () => {
+    console.log(`🎮 Bananapoly backend listening at http://localhost:${port}`);
+    console.log(`🌐 Network access: http://10.2.3.140:${port}`);
+    console.log(`📱 Para jogar em rede, o amigo deve conectar ao IP acima`);
 });
