@@ -8,8 +8,10 @@ export type Player = {
     money: number;
     properties: number[];
     purchaseAttemptUsed: boolean;
+    initialRoll?: number;
 };
 
+export type GamePhase = 'WAITING' | 'INITIAL_ROLL' | 'PLAYING';
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
 
 export type SpaceData = {
@@ -50,6 +52,7 @@ interface GameState {
     isRolling: boolean;
     currentQuestion: Question | null;
     pendingPurchaseId: number | null;
+    gamePhase: GamePhase;
 
     // Connection state
     socket: Socket | null;
@@ -85,6 +88,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     isRolling: false,
     currentQuestion: null,
     pendingPurchaseId: null,
+    gamePhase: 'WAITING',
     socket: null,
     isLoading: false,
     error: null,
@@ -96,11 +100,12 @@ export const useGameStore = create<GameState>((set, get) => ({
             console.log('🔌 Connected to server');
         });
 
-        socket.on('room-created', ({ code, isHost, gameState }) => {
+        socket.on('room-created', ({ code, isHost, playerId, gameState }) => {
             console.log('✅ Room created:', code);
             set({
                 roomCode: code,
                 isHost,
+                localPlayerId: playerId,
                 viewState: 'lobby',
                 isLoading: false,
                 error: null,
@@ -146,8 +151,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
 
         socket.on('game-started', () => {
-             console.log('🚀 Game started!');
-             set({ viewState: 'game' });
+            console.log('🚀 Game started!');
+            set({ viewState: 'game' });
         });
 
         set({ socket });

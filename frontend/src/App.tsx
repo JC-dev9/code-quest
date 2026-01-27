@@ -5,6 +5,7 @@ import { Board } from './components/Board';
 import { GameUI } from './components/GameUI';
 import { MainMenu } from './components/MainMenu';
 import { RoomLobby } from './components/RoomLobby';
+import { InitialRollOverlay } from './components/InitialRollOverlay';
 
 import { useGameStore } from './store/gameStore';
 
@@ -88,6 +89,7 @@ function App() {
       </Canvas>
 
       {/* UI Overlay */}
+      <InitialRollOverlay />
       <GameUI />
 
     </div>

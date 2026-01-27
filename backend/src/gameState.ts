@@ -6,9 +6,11 @@ export type Player = {
     properties: number[]; // Array of space IDs
     clientId: string | null; // Associated client session
     purchaseAttemptUsed: boolean; // Track if player already tried to purchase this turn
+    initialRoll?: number; // Dice roll to determine order
 };
 
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
+export type GamePhase = 'WAITING' | 'INITIAL_ROLL' | 'PLAYING';
 
 export type SpaceData = {
     id: number;
@@ -37,6 +39,7 @@ export interface GameStateData {
     isRolling: boolean;
     currentQuestion: Question | null;
     pendingPurchaseId: number | null;
+    gamePhase: GamePhase;
 }
 
 const BOARD_SIZE = 40;
@@ -47,6 +50,7 @@ export class GameState {
     private diceValue: [number, number] | null;
     private boardConfig: SpaceData[];
     private isRolling: boolean;
+    private gamePhase: GamePhase;
     private currentQuestion: Question | null = null;
     private pendingPurchaseId: number | null = null;
 
@@ -67,6 +71,7 @@ export class GameState {
         this.currentPlayerIndex = 0;
         this.diceValue = null;
         this.isRolling = false;
+        this.gamePhase = 'WAITING';
         this.boardConfig = this.generateBoard();
     }
 
@@ -129,49 +134,49 @@ export class GameState {
             boardConfig: this.boardConfig,
             isRolling: this.isRolling,
             currentQuestion: this.currentQuestion,
-            pendingPurchaseId: this.pendingPurchaseId
+            pendingPurchaseId: this.pendingPurchaseId,
+            gamePhase: this.gamePhase
         };
     }
 
+    public startGame() {
+        if (this.gamePhase === 'WAITING') {
+            this.gamePhase = 'INITIAL_ROLL';
+            // Start with the first player who joined
+            this.currentPlayerIndex = this.players.findIndex(p => p.clientId !== null);
+            if (this.currentPlayerIndex === -1) this.currentPlayerIndex = 0;
+        }
+    }
+
     public joinGame(clientId: string): number | null {
-        // Find existing player for this client
         const existingPlayer = this.players.find(p => p.clientId === clientId);
         if (existingPlayer) return existingPlayer.id;
 
-        // Assign to first available slot
         const availablePlayer = this.players.find(p => p.clientId === null);
         if (availablePlayer) {
             availablePlayer.clientId = clientId;
             return availablePlayer.id;
         }
 
-        return null; // No slots left
+        return null;
     }
 
     private validateAction(clientId: string): boolean {
         const currentPlayer = this.players[this.currentPlayerIndex];
-        const isValid = currentPlayer.clientId === clientId;
-        console.log(`[Validate] Player ${this.currentPlayerIndex + 1} (${currentPlayer.clientId}) vs Requester (${clientId}) -> ${isValid}`);
-        return isValid;
+        return currentPlayer && currentPlayer.clientId === clientId;
     }
 
     public rollDice(clientId: string) {
-        console.log(`[Roll] Request from ${clientId}`);
-        if (!this.validateAction(clientId)) {
-            console.log(`[Roll] Failed validation`);
+        if (!this.validateAction(clientId) || this.isRolling) return;
+
+        if (this.gamePhase === 'INITIAL_ROLL') {
+            this.handleInitialRoll();
             return;
         }
-        if (this.isRolling) {
-            console.log(`[Roll] Failed: Already rolling`);
-            return;
-        }
-        if (this.currentQuestion) {
-            console.log(`[Roll] Failed: Must answer question first`);
-            return;
-        }
+
+        if (this.gamePhase !== 'PLAYING' || this.currentQuestion) return;
 
         this.isRolling = true;
-
         const d1 = Math.floor(Math.random() * 6) + 1;
         const d2 = Math.floor(Math.random() * 6) + 1;
         const roll = d1 + d2;
@@ -180,12 +185,11 @@ export class GameState {
         let newPos = player.position + roll;
         if (newPos >= BOARD_SIZE) {
             newPos -= BOARD_SIZE;
-            player.money += 100; // Passed Start
+            player.money += 100;
         }
 
         player.position = newPos;
 
-        // Rent logic (50% of value)
         const space = this.boardConfig[newPos];
         if (space.type === 'property' && space.ownerId !== null && space.ownerId !== player.id) {
             const owner = this.players.find(p => p.id === space.ownerId);
@@ -200,36 +204,59 @@ export class GameState {
         this.isRolling = false;
     }
 
-    public requestPurchase(clientId: string) {
-        if (!this.validateAction(clientId)) return false;
-        const player = this.players[this.currentPlayerIndex];
+    private handleInitialRoll() {
+        this.isRolling = true;
+        const d1 = Math.floor(Math.random() * 6) + 1;
+        const d2 = Math.floor(Math.random() * 6) + 1;
+        this.diceValue = [d1, d2];
 
-        // Check if player already used their purchase attempt
+        const player = this.players[this.currentPlayerIndex];
+        player.initialRoll = d1 + d2;
+
+        setTimeout(() => {
+            this.isRolling = false;
+
+            // Find next player who has joined
+            let nextIndex = this.currentPlayerIndex + 1;
+            while (nextIndex < this.players.length && this.players[nextIndex].clientId === null) {
+                nextIndex++;
+            }
+
+            if (nextIndex < this.players.length) {
+                this.currentPlayerIndex = nextIndex;
+            } else {
+                // All joined players rolled, determine order
+                const activePlayers = this.players.filter(p => p.clientId !== null);
+                activePlayers.sort((a, b) => (b.initialRoll || 0) - (a.initialRoll || 0));
+
+                this.players = activePlayers;
+                this.currentPlayerIndex = 0;
+                this.gamePhase = 'PLAYING';
+                this.diceValue = null;
+            }
+        }, 1500);
+    }
+
+    public requestPurchase(clientId: string) {
+        if (this.gamePhase !== 'PLAYING' || !this.validateAction(clientId)) return false;
+        const player = this.players[this.currentPlayerIndex];
         if (player.purchaseAttemptUsed) return false;
 
         const space = this.boardConfig[player.position];
-
         if (space.type === 'property' && space.ownerId === null && player.money >= (space.price || 0)) {
-            // Select a question of matching level
             const available = this.questions.filter(q => q.level === space.level);
             this.currentQuestion = available[Math.floor(Math.random() * available.length)] || this.questions[0];
             this.pendingPurchaseId = space.id;
-
-            // Mark attempt as used
             player.purchaseAttemptUsed = true;
-
             return true;
         }
         return false;
     }
 
     public answerQuestion(clientId: string, optionIndex: number) {
-        if (!this.validateAction(clientId)) return false;
-        if (!this.currentQuestion || this.pendingPurchaseId === null) return false;
-
+        if (!this.validateAction(clientId) || !this.currentQuestion || this.pendingPurchaseId === null) return false;
         const player = this.players[this.currentPlayerIndex];
         const space = this.boardConfig[this.pendingPurchaseId];
-
         const isCorrect = optionIndex === this.currentQuestion.correctIndex;
 
         if (isCorrect) {
@@ -244,18 +271,13 @@ export class GameState {
     }
 
     public sellProperty(clientId: string, propertyId: number) {
-        // Selling can be done by the owner, but for simplicity we only allow it on their turn
-        // OR we could allow it anytime if it's their property.
-        // The user said "na minha vez", so let's stick to turn-based or owner-based validation.
         const player = this.players.find(p => p.clientId === clientId);
         if (!player) return false;
 
         const propertyIndex = player.properties.indexOf(propertyId);
-
         if (propertyIndex > -1) {
             const space = this.boardConfig[propertyId];
             const salePrice = Math.floor((space.price || 0) * 0.25);
-
             player.money += salePrice;
             player.properties.splice(propertyIndex, 1);
             space.ownerId = null;
@@ -265,11 +287,10 @@ export class GameState {
     }
 
     public nextTurn(clientId: string) {
-        if (!this.validateAction(clientId)) return;
+        if (this.gamePhase !== 'PLAYING' || !this.validateAction(clientId)) return;
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.diceValue = null;
-
-        // Reset purchase attempt for the new current player
         this.players[this.currentPlayerIndex].purchaseAttemptUsed = false;
     }
 }
+

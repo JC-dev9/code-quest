@@ -37,21 +37,25 @@ io.on('connection', (socket) => {
     socket.on('create-room', () => {
         const roomCode = generateRoomCode();
         const gameState = new GameState();
-        
+
         // Auto-join host as player 1
         // We use socket.id as clientId for simplicity in this session
         const playerId = gameState.joinGame(socket.id);
-        
+
         rooms.set(roomCode, gameState);
         socket.join(roomCode);
 
         console.log(`Room created: ${roomCode} by ${socket.id}`);
-        
-        socket.emit('room-created', { 
-            code: roomCode, 
-            isHost: true, 
-            gameState: gameState.getState() 
+
+        socket.emit('room-created', {
+            code: roomCode,
+            isHost: true,
+            playerId,
+            gameState: gameState.getState()
         });
+
+        // Broadcast that a player joined (the host)
+        io.to(roomCode).emit('game-state-updated', gameState.getState());
     });
 
     socket.on('join-room', (roomCode) => {
@@ -71,11 +75,11 @@ io.on('connection', (socket) => {
         console.log(`User ${socket.id} joined room ${roomCode}`);
 
         // Notify user they joined
-        socket.emit('room-joined', { 
-            code: roomCode, 
-            isHost: false, 
-            playerId, 
-            gameState: gameState.getState() 
+        socket.emit('room-joined', {
+            code: roomCode,
+            isHost: false,
+            playerId,
+            gameState: gameState.getState()
         });
 
         // Notify everyone in room of update
@@ -86,8 +90,11 @@ io.on('connection', (socket) => {
         // Find room and broadcast start
         for (const roomCode of socket.rooms) {
             if (rooms.has(roomCode)) {
+                const gameState = rooms.get(roomCode)!;
+                gameState.startGame();
                 console.log(`🚀 Game started in room ${roomCode}`);
                 io.to(roomCode).emit('game-started');
+                io.to(roomCode).emit('game-state-updated', gameState.getState());
                 return;
             }
         }

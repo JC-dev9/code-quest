@@ -6,13 +6,13 @@ export const GameUI: React.FC = () => {
     const {
         currentPlayerIndex, players, diceValue, rollDice, isRolling,
         nextTurn, requestPurchase, answerQuestion, boardConfig,
-        currentQuestion, localPlayerId
+        currentQuestion, localPlayerId, gamePhase
     } = useGameStore();
 
     const currentPlayer = players[currentPlayerIndex];
     const isMyTurn = localPlayerId === (currentPlayer?.id);
 
-    if (!currentPlayer) return null; // Wait for data
+    if (!currentPlayer || gamePhase === 'INITIAL_ROLL') return null; // Wait for data or wait for initial rolls
 
     return (
         <div className="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between z-10">
