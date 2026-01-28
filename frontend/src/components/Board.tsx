@@ -2,9 +2,12 @@ import React from 'react';
 import { Space } from './Space';
 import { PlayerToken } from './PlayerToken';
 import { useGameStore } from '../store/gameStore';
+import { useLoader } from '@react-three/fiber';
+import { TextureLoader } from 'three';
 
 export const Board: React.FC = () => {
     const { boardConfig, players } = useGameStore();
+    const logoTexture = useLoader(TextureLoader, '/logo.jpg');
 
     const getPosition = (index: number): [number, number, number] => {
         let x = 0, z = 0;
@@ -42,6 +45,7 @@ export const Board: React.FC = () => {
                         level={space.level}
                         isImportant={space.isImportant}
                         ownerColor={owner?.color}
+                        imageUrl={space.imageUrl}
                     />
                 );
             })}
@@ -49,7 +53,7 @@ export const Board: React.FC = () => {
             {/* Center Decoration */}
             <mesh position={[0, -0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <planeGeometry args={[18, 18]} />
-                <meshStandardMaterial color="#222" />
+                <meshStandardMaterial map={logoTexture} color="#888" /> 
             </mesh>
 
             {/* Players */}

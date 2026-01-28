@@ -76,40 +76,109 @@ export class GameState {
     }
 
     private generateBoard(): SpaceData[] {
-        const importantCompanies = {
-            5: "Nvidia",
-            15: "Amazon",
-            25: "Apple",
-            35: "Microsoft"
-        };
+        // Define companies by tier/folder
+        const tier50 = [
+            { name: "Fortinet", file: "64px-Fortinet_Logo.png" },
+            { name: "Verce", file: "Vercel.png" }, // "Vercel" typo in file list or truncated? Assuming Vercel.png
+            { name: "Stripe", file: "Stripe.png" },
+            { name: "Stack Overflow", file: "Stack_Overflow.png" },
+            { name: "Slack", file: "Slack.png" },
+            { name: "Figma", file: "Figma.png" },
+            { name: "GitHub", file: "GitHub.png" },
+            { name: "LinkedIn", file: "linkedIn_PNG6.png" }
+        ];
 
-        return Array.from({ length: BOARD_SIZE }).map((_, i) => {
+        const tier100 = [
+            { name: "Rapeberry PI", file: "RapeberryPI.png" }, // Typo in filename?
+            { name: "Arduino", file: "Arduino.png" },
+            { name: "Spotify", file: "Spotify.png" },
+            { name: "Shopify", file: "Shopify.png" },
+            { name: "ThinkPad", file: "ThinkPad.png" },
+            { name: "Intel", file: "intel.png" },
+            { name: "Postman", file: "PostMan.png" },
+            { name: "OpenAI", file: "OpenAI.png" }
+        ];
+
+        const tier150 = [
+            { name: "Tencent", file: "128px-Tencent_logo_2017.svg.png" },
+            { name: "AMD", file: "AMD.png" },
+            { name: "Adobe", file: "Adobe.png" },
+            { name: "Cisco", file: "Cisco.png" },
+            { name: "Red Hat", file: "Red_Hat.png" },
+            { name: "Azure", file: "Azure.png" },
+            { name: "PostgreSQL", file: "PostgreSQL.png" },
+            { name: "Jetbrains", file: "Jetbrains.png" }
+        ];
+
+        const tier200 = [
+            { name: "Linux Foundation", file: "64px-Linux_Foundation_logo.png" },
+            { name: "SpaceX", file: "SpaceX.png" },
+            { name: "Docker", file: "Docker.png" },
+            { name: "Oracle", file: "Oracle.png" },
+            { name: "Broadcom", file: "Broadcom.png" },
+            { name: "YouTube", file: "YouTube.png" },
+            { name: "Meta", file: "Meta.png" },
+            { name: "AWS", file: "AWS.png" }
+        ];
+
+        // Helper to get image path
+        const getPath = (folder: string, file: string) => `/logosCodeQuest/Nova pasta/${folder}/${file}`;
+
+        return Array.from({ length: 40 }).map((_, i) => {
             let color = '#e5e7eb';
             let type: 'property' | 'corner' = 'property';
             let level: SpaceLevel = 'Fácil';
             let name = `Empresa ${i}`;
-            let price = 50 + (i * 10);
+            let price = 50;
             let isImportant = false;
+            let imageUrl = '';
 
-            if (i === 0) { type = 'corner'; name = 'Start'; color = '#22c55e'; level = 'Corner'; }
-            else if (i === 10) { type = 'corner'; name = 'Chat GPT'; color = '#3b82f6'; level = 'Corner'; }
-            else if (i === 20) { type = 'corner'; name = 'Auditoria'; color = '#ef4444'; level = 'Corner'; }
-            else if (i === 30) { type = 'corner'; name = 'Coffee Break'; color = '#f59e0b'; level = 'Corner'; }
-            else {
-                if (importantCompanies[i as keyof typeof importantCompanies]) {
-                    name = importantCompanies[i as keyof typeof importantCompanies];
-                    level = 'Extremo';
-                    price = 400;
-                    isImportant = true;
-                } else if (i < 10) level = 'Fácil';
-                else if (i < 20) level = 'Intermédio';
-                else if (i < 30) level = 'Difícil';
-                else level = 'Extremo';
+            // Corners
+            if (i === 0) { return { id: i, name: 'Start', color: '#22c55e', type: 'corner', level: 'Corner' }; }
+            if (i === 10) { return { id: i, name: 'Chat GPT', color: '#3b82f6', type: 'corner', level: 'Corner' }; } // Jail/Visiting
+            if (i === 20) { return { id: i, name: 'Auditoria', color: '#ef4444', type: 'corner', level: 'Corner' }; } // Free Parking
+            if (i === 30) { return { id: i, name: 'Coffee Break', color: '#f59e0b', type: 'corner', level: 'Corner' }; } // Go to Jail
 
-                if (level === 'Fácil') color = '#8B4513';
-                else if (level === 'Intermédio') color = '#87CEEB';
-                else if (level === 'Difícil') color = '#FFD700';
-                else color = '#228B22';
+            // Assign companies based on board position (approximate Monopoly grouping)
+            // 0-10: Tier 50 (Brown/LightBlue)
+            // 11-20: Tier 100 (Pink/Orange)
+            // 21-30: Tier 150 (Red/Yellow)
+            // 31-39: Tier 200 (Green/Blue)
+
+            if (i > 0 && i < 10) {
+                const idx = (i - 1) % tier50.length;
+                const company = tier50[idx];
+                name = company.name;
+                price = 50;
+                level = 'Fácil';
+                color = i < 5 ? '#8B4513' : '#87CEEB'; // Brown / Light Blue equivalent
+                imageUrl = getPath('50', company.file);
+            } else if (i > 10 && i < 20) {
+                const idx = (i - 11) % tier100.length;
+                const company = tier100[idx];
+                name = company.name;
+                price = 100;
+                level = 'Intermédio';
+                color = i < 15 ? '#DA70D6' : '#FFA500'; // Pink / Orange
+                imageUrl = getPath('100', company.file);
+            } else if (i > 20 && i < 30) {
+                const idx = (i - 21) % tier150.length;
+                const company = tier150[idx];
+                name = company.name;
+                price = 150;
+                level = 'Difícil';
+                color = i < 25 ? '#FF0000' : '#FFD700'; // Red / Yellow
+                imageUrl = getPath('150', company.file);
+            } else if (i > 30) {
+                const idx = (i - 31) % tier200.length;
+                const company = tier200[idx];
+                name = company.name;
+                price = 200;
+                level = 'Extremo';
+                color = i < 35 ? '#008000' : '#0000FF'; // Green / Dark Blue
+                imageUrl = getPath('200', company.file);
+                
+                if (i >= 37) isImportant = true; // Top tier
             }
 
             return {
@@ -119,9 +188,9 @@ export class GameState {
                 type,
                 level,
                 isImportant,
-                price: type === 'property' ? price : undefined,
+                price,
                 ownerId: null,
-                imageUrl: `https://picsum.photos/seed/${i}/200`
+                imageUrl
             };
         });
     }
@@ -234,6 +303,10 @@ export class GameState {
                 this.gamePhase = 'PLAYING';
                 this.diceValue = null;
             }
+
+            if (this.onStateChange) {
+                this.onStateChange(this.getState());
+            }
         }, 1500);
     }
 
@@ -284,6 +357,12 @@ export class GameState {
             return true;
         }
         return false;
+    }
+
+    private onStateChange: ((state: GameStateData) => void) | null = null;
+
+    public setOnStateChange(cb: (state: GameStateData) => void) {
+        this.onStateChange = cb;
     }
 
     public nextTurn(clientId: string) {

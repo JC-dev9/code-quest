@@ -34,6 +34,10 @@ io.on('connection', (socket) => {
     socket.on('create-room', () => {
         const roomCode = generateRoomCode();
         const gameState = new gameState_1.GameState();
+        // Register callback for async state updates (e.g. initial roll timeout)
+        gameState.setOnStateChange((state) => {
+            io.to(roomCode).emit('game-state-updated', state);
+        });
         // Auto-join host as player 1
         // We use socket.id as clientId for simplicity in this session
         const playerId = gameState.joinGame(socket.id);
@@ -43,8 +47,11 @@ io.on('connection', (socket) => {
         socket.emit('room-created', {
             code: roomCode,
             isHost: true,
+            playerId,
             gameState: gameState.getState()
         });
+        // Broadcast that a player joined (the host)
+        io.to(roomCode).emit('game-state-updated', gameState.getState());
     });
     socket.on('join-room', (roomCode) => {
         const gameState = rooms.get(roomCode);
@@ -73,8 +80,11 @@ io.on('connection', (socket) => {
         // Find room and broadcast start
         for (const roomCode of socket.rooms) {
             if (rooms.has(roomCode)) {
+                const gameState = rooms.get(roomCode);
+                gameState.startGame();
                 console.log(`🚀 Game started in room ${roomCode}`);
                 io.to(roomCode).emit('game-started');
+                io.to(roomCode).emit('game-state-updated', gameState.getState());
                 return;
             }
         }
@@ -113,6 +123,8 @@ io.on('connection', (socket) => {
         // Handle cleanup if needed, or wait for reconnect
     });
 });
-httpServer.listen(port, () => {
-    console.log(`Bananapoly backend listening at http://localhost:${port}`);
+httpServer.listen(port, '0.0.0.0', () => {
+    console.log(`🎮 Bananapoly backend listening at http://localhost:${port}`);
+    console.log(`🌐 Network access: http://10.2.3.140:${port}`);
+    console.log(`📱 Para jogar em rede, o amigo deve conectar ao IP acima`);
 });

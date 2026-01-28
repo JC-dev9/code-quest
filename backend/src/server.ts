@@ -37,6 +37,11 @@ io.on('connection', (socket) => {
     socket.on('create-room', () => {
         const roomCode = generateRoomCode();
         const gameState = new GameState();
+        
+        // Register callback for async state updates (e.g. initial roll timeout)
+        gameState.setOnStateChange((state) => {
+            io.to(roomCode).emit('game-state-updated', state);
+        });
 
         // Auto-join host as player 1
         // We use socket.id as clientId for simplicity in this session
