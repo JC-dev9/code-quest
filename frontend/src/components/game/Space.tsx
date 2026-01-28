@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useLoader } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import type { SpaceLevel } from '../store/gameStore';
+import type { SpaceLevel } from '../../store/gameStore';
 
 interface SpaceProps {
     position: [number, number, number];
@@ -16,7 +16,7 @@ interface SpaceProps {
     imageUrl?: string;
 }
 
-export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, price, level, isImportant, ownerColor, imageUrl }) => {
+export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, price, ownerColor, imageUrl }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const texture = imageUrl ? useLoader(THREE.TextureLoader, imageUrl) : null;
 
@@ -31,7 +31,7 @@ export const Space: React.FC<SpaceProps> = ({ position, color, name, isCorner, p
                 <boxGeometry args={[width * 0.95, height, depth * 0.95]} />
                 <meshStandardMaterial color={ownerColor || "#1e293b"} />
             </mesh>
-
+            
             {/* Color Strip (Top) */}
             {!isCorner && (
                 <mesh position={[0, height / 2 + 0.001, -0.7]} rotation={[-Math.PI / 2, 0, 0]}>

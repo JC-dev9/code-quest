@@ -20,19 +20,19 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
     const canStart = players.length >= 2;
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 z-50">
             <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/20 max-w-2xl w-full">
-                {/* Title */}
+                {/* Título */}
                 <div className="text-center mb-8">
                     <h2 className="text-4xl font-bold text-white mb-2">
                         🎮 Sala de Espera
                     </h2>
                     <p className="text-purple-200">
-                        Esperando jogadores...
+                        Aguardando jogadores...
                     </p>
                 </div>
 
-                {/* Room Code */}
+                {/* Código da Sala */}
                 <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/20">
                     <p className="text-purple-200 text-sm mb-2 text-center">
                         Código da Sala
@@ -50,7 +50,7 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                     </div>
                 </div>
 
-                {/* Players List */}
+                {/* Lista de Jogadores */}
                 <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/20">
                     <p className="text-purple-200 text-sm mb-4 text-center">
                         Jogadores ({players.length}/2)
@@ -80,14 +80,14 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                         {players.length < 2 && (
                             <div className="flex items-center justify-center bg-white/5 rounded-xl p-4 border-2 border-dashed border-white/20">
                                 <span className="text-purple-300 text-lg">
-                                    🔍 Esperando jogador...
+                                    🔍 À espera de jogador...
                                 </span>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Botões de Ação */}
                 <div className="space-y-3">
                     {isHost && (
                         <button
@@ -100,7 +100,7 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                     )}
                     {!isHost && (
                         <div className="w-full py-4 px-6 bg-white/10 text-purple-200 font-semibold text-center rounded-xl border border-white/20">
-                            ⏳ Esperando o host iniciar o jogo...
+                            ⏳ À espera que o host incie o jogo...
                         </div>
                     )}
                     <button

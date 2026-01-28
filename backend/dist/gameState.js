@@ -29,7 +29,7 @@ class GameState {
         // Define companies by tier/folder
         const tier50 = [
             { name: "Fortinet", file: "64px-Fortinet_Logo.png" },
-            { name: "Vercel", file: "Vercel.png" },
+            { name: "Verce", file: "Vercel.png" }, // "Vercel" typo in file list or truncated? Assuming Vercel.png
             { name: "Stripe", file: "Stripe.png" },
             { name: "Stack Overflow", file: "Stack_Overflow.png" },
             { name: "Slack", file: "Slack.png" },
@@ -38,7 +38,7 @@ class GameState {
             { name: "LinkedIn", file: "linkedIn_PNG6.png" }
         ];
         const tier100 = [
-            { name: "Raspberry Pi", file: "RapeberryPI.png" },
+            { name: "Rapeberry PI", file: "RapeberryPI.png" }, // Typo in filename?
             { name: "Arduino", file: "Arduino.png" },
             { name: "Spotify", file: "Spotify.png" },
             { name: "Shopify", file: "Shopify.png" },

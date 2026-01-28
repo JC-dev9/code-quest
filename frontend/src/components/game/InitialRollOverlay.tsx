@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 
 export const InitialRollOverlay: React.FC = () => {
     const {

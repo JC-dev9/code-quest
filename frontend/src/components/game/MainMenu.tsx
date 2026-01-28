@@ -17,9 +17,9 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 z-50">
             <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 shadow-2xl border border-white/20 max-w-md w-full">
-                {/* Title */}
+                {/* Título */}
                 <div className="text-center mb-10">
                     <h1 className="text-6xl font-bold text-white mb-2 drop-shadow-lg">
                         Code Quest
@@ -29,14 +29,14 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
                     </p>
                 </div>
 
-                {/* Error Message */}
+                {/* Mensagem de Erro */}
                 {error && (
                     <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-center">
                         {error}
                     </div>
                 )}
 
-                {/* Create Room Button */}
+                {/* Botão Criar Sala */}
                 <button
                     onClick={onCreateRoom}
                     disabled={isLoading}
@@ -45,7 +45,7 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
                     {isLoading ? '🔄 Criando...' : '🎮 Criar Sala'}
                 </button>
 
-                {/* Divider */}
+                {/* Divisor */}
                 <div className="relative my-8">
                     <div className="absolute inset-0 flex items-center">
                         <div className="w-full border-t border-white/20"></div>
@@ -57,7 +57,7 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
                     </div>
                 </div>
 
-                {/* Join Room */}
+                {/* Entrar na Sala */}
                 <div className="space-y-4">
                     <input
                         type="text"

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 
+// Definição dos tipos principais do jogo
 export type Player = {
     id: number;
     color: string;
@@ -36,14 +37,14 @@ export interface Question {
 type ViewState = 'menu' | 'lobby' | 'game';
 
 interface GameState {
-    // View state
+    // Estado da Visualização
     viewState: ViewState;
 
-    // Room state
+    // Estado da Sala
     roomCode: string | null;
     isHost: boolean;
 
-    // Game state
+    // Estado do Jogo
     players: Player[];
     currentPlayerIndex: number;
     localPlayerId: number | null;
@@ -54,12 +55,12 @@ interface GameState {
     pendingPurchaseId: number | null;
     gamePhase: GamePhase;
 
-    // Connection state
+    // Estado da Conexão
     socket: Socket | null;
     isLoading: boolean;
     error: string | null;
 
-    // Actions
+    // Ações
     connectSocket: () => void;
     disconnectSocket: () => void;
     createRoom: () => void;
@@ -76,7 +77,7 @@ interface GameState {
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const useGameStore = create<GameState>((set, get) => ({
-    // Initial state
+    // Estado Inicial
     viewState: 'menu',
     roomCode: null,
     isHost: false,
@@ -97,11 +98,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         const socket = io(API_URL);
 
         socket.on('connect', () => {
-            console.log('🔌 Connected to server');
+            console.log('🔌 Conectado ao servidor');
         });
 
         socket.on('room-created', ({ code, isHost, playerId, gameState }) => {
-            console.log('✅ Room created:', code);
+            console.log('✅ Sala criada:', code);
             set({
                 roomCode: code,
                 isHost,
@@ -114,7 +115,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
 
         socket.on('room-joined', ({ code, isHost, playerId, gameState }) => {
-            console.log('✅ Room joined:', code);
+            console.log('✅ Entrou na sala:', code);
             set({
                 roomCode: code,
                 isHost,
@@ -127,22 +128,21 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
 
         socket.on('game-state-updated', (gameState) => {
-            console.log('🔄 Game state updated');
+            console.log('🔄 Estado do jogo atualizado');
             set({ ...gameState });
         });
 
         socket.on('error', ({ message }) => {
-            console.error('❌ Error:', message);
+            console.error('❌ Erro:', message);
             set({ error: message, isLoading: false });
         });
 
         socket.on('player-disconnected', ({ socketId }) => {
-            console.log('👋 Player disconnected:', socketId);
-            // Could show a notification here
+            console.log('👋 Jogador desconectado:', socketId);
         });
 
         socket.on('disconnect', () => {
-            console.log('🔌 Disconnected from server');
+            console.log('🔌 Desconectado do servidor');
             set({
                 viewState: 'menu',
                 roomCode: null,
@@ -151,7 +151,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
 
         socket.on('game-started', () => {
-            console.log('🚀 Game started!');
+            console.log('🚀 Jogo iniciado!');
             set({ viewState: 'game' });
         });
 
@@ -206,12 +206,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         set({ isRolling: true });
 
-        // Simulate animation delay for UX
+        // Simula delay de animação para UX
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         socket.emit('roll-dice');
 
-        // The isRolling will be reset by game-state-updated event
+        // isRolling será resetado pelo evento game-state-updated
         setTimeout(() => {
             set({ isRolling: false });
         }, 1500);

@@ -1,11 +1,11 @@
 import { Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, Sky } from '@react-three/drei';
-import { Board } from './components/Board';
-import { GameUI } from './components/GameUI';
-import { MainMenu } from './components/MainMenu';
-import { RoomLobby } from './components/RoomLobby';
-import { InitialRollOverlay } from './components/InitialRollOverlay';
+import { Board } from './components/game/Board';
+import { GameHUD } from './components/game/GameHUD';
+import { MainMenu } from './components/game/MainMenu';
+import { RoomLobby } from './components/game/RoomLobby';
+import { InitialRollOverlay } from './components/game/InitialRollOverlay';
 
 import { useGameStore } from './store/gameStore';
 
@@ -90,7 +90,7 @@ function App() {
 
       {/* UI Overlay */}
       <InitialRollOverlay />
-      <GameUI />
+      <GameHUD />
 
     </div>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Space } from './Space';
 import { PlayerToken } from './PlayerToken';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '../../store/gameStore';
 import { useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 
