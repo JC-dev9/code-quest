@@ -76,9 +76,17 @@ export class RoomManager {
             if (room.playerSockets.has(socketId)) {
                 room.playerSockets.delete(socketId);
 
-                // Remove room if empty
+                // Remove room if empty after a grace period (to allow reloads)
                 if (room.playerSockets.size === 0) {
-                    this.removeRoom(code);
+                    console.log(`⏳ Sala ${code} vazia. Agendando remoção em 2 min...`);
+                    setTimeout(() => {
+                        // Check if still empty
+                        if (this.rooms.has(code) && this.rooms.get(code)!.playerSockets.size === 0) {
+                            this.removeRoom(code);
+                        } else {
+                            console.log(`♻️ Sala ${code} recuperada ou já removida.`);
+                        }
+                    }, 2 * 60 * 1000); // 2 minutes grace period
                 }
                 break;
             }

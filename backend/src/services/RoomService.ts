@@ -57,6 +57,14 @@ export class RoomService {
         return room;
     }
 
+    public addPlayerSocket(code: string, socketId: string): boolean {
+        const room = this.rooms.get(code);
+        if (!room) return false;
+
+        room.playerSockets.add(socketId);
+        return true;
+    }
+
     public getRoom(code: string): Room | null {
         return this.rooms.get(code) || null;
     }
@@ -75,9 +83,16 @@ export class RoomService {
             if (room.playerSockets.has(socketId)) {
                 room.playerSockets.delete(socketId);
 
-                // Remover sala se estiver vazia
+                // Remover sala se estiver vazia após grace period
                 if (room.playerSockets.size === 0) {
-                    this.removeRoom(code);
+                    console.log(`⏳ Sala ${code} vazia. Agendando remoção em 2 min...`);
+                    setTimeout(() => {
+                        if (this.rooms.has(code) && this.rooms.get(code)!.playerSockets.size === 0) {
+                            this.removeRoom(code);
+                        } else {
+                            console.log(`♻️ Sala ${code} recuperada ou já removida.`);
+                        }
+                    }, 2 * 60 * 1000);
                 }
                 break;
             }

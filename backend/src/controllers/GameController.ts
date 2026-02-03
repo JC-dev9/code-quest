@@ -72,6 +72,49 @@ export class GameController {
 
             this.io.to(roomCode).emit('game-state-updated', gameService.getState());
         });
+
+        socket.on('rejoin-room', ({ roomCode, playerId }) => {
+            console.log(`🔄 Tentativa de reconexão: Player ${playerId} na sala ${roomCode}`);
+            const room = this.roomService.getRoom(roomCode);
+
+            if (!room) {
+                socket.emit('error', { message: "Sala não encontrada ou expirada" });
+                return;
+            }
+
+            // Tenta reconectar o jogador no serviço de jogo
+            const success = room.gameService.reconnectPlayer(playerId, socket.id);
+
+            if (success) {
+                // Atualiza lista de sockets da sala
+                // Usamos joinRoom para adicionar o socket, mas precisamos garantir que não crie novo player
+                // Como já chamamos reconnectPlayer, o GameService já está atualizado.
+                // Apenas precisamos adicionar o socket na RoomService
+
+                // Adiciona o novo socket à sala
+                this.roomService.addPlayerSocket(roomCode, socket.id);
+
+                // Recupera status de Host se for o Player 1
+                if (playerId === 1) {
+                    room.hostSocketId = socket.id;
+                }
+
+                socket.join(roomCode);
+
+                console.log(`✅ Player ${playerId} reconectado com socket ${socket.id}`);
+
+                socket.emit('room-joined', {
+                    code: roomCode,
+                    isHost: playerId === 1,
+                    playerId,
+                    gameState: room.gameService.getState()
+                });
+
+                this.io.to(roomCode).emit('game-state-updated', room.gameService.getState());
+            } else {
+                socket.emit('error', { message: "Jogador não encontrado nesta sala" });
+            }
+        });
     }
 
     private setupGameHandlers(socket: Socket) {
@@ -120,11 +163,11 @@ export class GameController {
         socket.on('disconnect', () => {
             console.log('Utilizador desconectado:', socket.id);
             const room = this.roomService.getRoomBySocket(socket.id);
-            
+
             if (room) {
                 this.roomService.removePlayerFromRoom(socket.id);
                 this.io.to(room.code).emit('player-disconnected', { socketId: socket.id });
-                
+
                 // Opcional: Pausar jogo ou remover jogador do estado do jogo
                 // Para MVP, mantemos o estado mas o jogador fica "offline" no socket
             }

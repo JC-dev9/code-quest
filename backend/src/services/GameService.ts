@@ -75,6 +75,15 @@ export class GameService {
         return playerId;
     }
 
+    public reconnectPlayer(playerId: number, newClientId: string): boolean {
+        const player = this.players.find(p => p.id === playerId);
+        if (player) {
+            player.clientId = newClientId;
+            return true;
+        }
+        return false;
+    }
+
     public startGame() {
         if (this.gamePhase === 'WAITING') {
             this.gamePhase = 'INITIAL_ROLL';
@@ -137,27 +146,30 @@ export class GameService {
         const player = this.players[this.currentPlayerIndex];
         player.initialRoll = d1 + d2;
 
-        // Pequeno delay para UX
+        // Delay para UX (visualização dos dados)
         setTimeout(() => {
             this.isRolling = false;
 
-            // Encontrar o próximo jogador humano
-            let nextIndex = this.currentPlayerIndex + 1;
-            while (nextIndex < this.players.length && this.players[nextIndex].clientId === null) {
-                nextIndex++;
-            }
+            // Lógica Robusta: Encontrar o próximo jogador que AINDA NÃO rolou
+            // Preserva a ordem de entrada original para a fase de rolagens
+            const nextPlayerIndex = this.players.findIndex(p => p.initialRoll === undefined);
 
-            if (nextIndex < this.players.length) {
-                this.currentPlayerIndex = nextIndex;
+            if (nextPlayerIndex !== -1) {
+                // Passa a vez para o próximo que precisa rolar
+                this.currentPlayerIndex = nextPlayerIndex;
             } else {
-                // Todos rolaram, definir ordem
-                const activePlayers = this.players.filter(p => p.clientId !== null);
+                // Todos rolaram, definir ordem final do jogo
+                const activePlayers = [...this.players];
+
+                // Ordenar por maior soma de dados
                 activePlayers.sort((a, b) => (b.initialRoll || 0) - (a.initialRoll || 0));
 
                 this.players = activePlayers;
-                this.currentPlayerIndex = 0;
+                this.currentPlayerIndex = 0; // Primeiro da nova ordem começa
                 this.gamePhase = 'PLAYING';
                 this.diceValue = null;
+
+                console.log('🏁 Ordem definida:', this.players.map(p => `${p.id} (${p.initialRoll})`).join(', '));
             }
 
             this.notifyStateChange();
@@ -171,17 +183,20 @@ export class GameService {
         if (player.purchaseAttemptUsed) return false;
 
         const space = this.boardConfig[player.position];
+        // Validação estrita de dinheiro e propriedade
         if (space.type === 'property' && space.ownerId === null && player.money >= (space.price || 0)) {
             const available = QUESTIONS.filter(q => q.level === space.level);
             this.currentQuestion = available[Math.floor(Math.random() * available.length)] || QUESTIONS[0];
             this.pendingPurchaseId = space.id;
             player.purchaseAttemptUsed = true;
+            this.notifyStateChange(); // Notificar início da pergunta
             return true;
         }
         return false;
     }
 
     public answerQuestion(clientId: string, optionIndex: number): boolean {
+        // Validação extra: verificar se pergunta existe
         if (!this.validateAction(clientId) || !this.currentQuestion || this.pendingPurchaseId === null) return false;
 
         const player = this.players[this.currentPlayerIndex];
@@ -196,20 +211,24 @@ export class GameService {
 
         this.currentQuestion = null;
         this.pendingPurchaseId = null;
+        this.notifyStateChange();
         return isCorrect;
     }
 
     public sellProperty(clientId: string, propertyId: number): boolean {
+        // Permite venda a qualquer momento para liquidez imediata
         const player = this.players.find(p => p.clientId === clientId);
         if (!player) return false;
 
         const propertyIndex = player.properties.indexOf(propertyId);
         if (propertyIndex > -1) {
             const space = this.boardConfig[propertyId];
-            const salePrice = Math.floor((space.price || 0) * 0.25);
+            const salePrice = Math.floor((space.price || 0) * 0.25); // 25% do valor original
             player.money += salePrice;
             player.properties.splice(propertyIndex, 1);
             space.ownerId = null;
+
+            this.notifyStateChange();
             return true;
         }
         return false;
@@ -218,8 +237,17 @@ export class GameService {
     public nextTurn(clientId: string) {
         if (this.gamePhase !== 'PLAYING' || !this.validateAction(clientId)) return;
 
+        // Avança para o próximo jogador
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+
+        // Reset de estados de turno
         this.diceValue = null;
         this.players[this.currentPlayerIndex].purchaseAttemptUsed = false;
+
+        // Garantir estado limpo
+        this.currentQuestion = null;
+        this.pendingPurchaseId = null;
+
+        this.notifyStateChange();
     }
 }

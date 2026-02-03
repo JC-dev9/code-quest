@@ -99,10 +99,25 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         socket.on('connect', () => {
             console.log('🔌 Conectado ao servidor');
+
+            // Tenta reconexão automática se houver sessão salva
+            const session = localStorage.getItem('codequest_session');
+            if (session) {
+                try {
+                    const { roomCode, playerId } = JSON.parse(session);
+                    console.log('🔄 Tentando reconectar à sessão anterior...', roomCode);
+                    console.log('Player ID:', playerId);
+                    socket.emit('rejoin-room', { roomCode, playerId });
+                } catch (e) {
+                    console.error('Erro ao ler sessão salva:', e);
+                    localStorage.removeItem('codequest_session');
+                }
+            }
         });
 
         socket.on('room-created', ({ code, isHost, playerId, gameState }) => {
             console.log('✅ Sala criada:', code);
+            localStorage.setItem('codequest_session', JSON.stringify({ roomCode: code, playerId }));
             set({
                 roomCode: code,
                 isHost,
@@ -116,11 +131,18 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         socket.on('room-joined', ({ code, isHost, playerId, gameState }) => {
             console.log('✅ Entrou na sala:', code);
+            localStorage.setItem('codequest_session', JSON.stringify({ roomCode: code, playerId }));
+
+            // Se o jogo já estiver em andamento, vai direto para a tela do jogo
+            const targetView = (gameState.gamePhase === 'INITIAL_ROLL' || gameState.gamePhase === 'PLAYING')
+                ? 'game'
+                : 'lobby';
+
             set({
                 roomCode: code,
                 isHost,
                 localPlayerId: playerId,
-                viewState: 'lobby',
+                viewState: targetView,
                 isLoading: false,
                 error: null,
                 ...gameState
@@ -183,6 +205,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
     leaveRoom: () => {
+        localStorage.removeItem('codequest_session');
         set({
             viewState: 'menu',
             roomCode: null,
