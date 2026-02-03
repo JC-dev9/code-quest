@@ -9,7 +9,7 @@ export const InitialRollOverlay: React.FC = () => {
         localPlayerId,
         rollDice,
         isRolling,
-        diceValue,
+        diceValue: _diceValue,
         gamePhase
     } = useGameStore();
 
@@ -44,13 +44,12 @@ export const InitialRollOverlay: React.FC = () => {
                         return (
                             <div
                                 key={player.id}
-                                className={`relative bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-5 border-2 transition-all duration-500 ${
-                                    isCurrentTurn 
-                                        ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)] scale-105' 
-                                        : hasRolled 
-                                        ? 'border-purple-500/30' 
-                                        : 'border-white/10 opacity-60'
-                                } animate-slide-in`}
+                                className={`relative bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-5 border-2 transition-all duration-500 ${isCurrentTurn
+                                        ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)] scale-105'
+                                        : hasRolled
+                                            ? 'border-purple-500/30'
+                                            : 'border-white/10 opacity-60'
+                                    } animate-slide-in`}
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 {/* Active Turn Indicator */}

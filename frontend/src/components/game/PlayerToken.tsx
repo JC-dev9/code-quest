@@ -1,9 +1,13 @@
-import React, { useRef, Suspense } from 'react';
+import React, { useRef, Suspense, useEffect, useState, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGameStore } from '../../store/gameStore';
 import { getModelPath, getModelScale } from '../../config/modelConfig';
 import * as THREE from 'three';
+
+const BOARD_SIZE = 40;
+const MOVE_SPEED = 8; // Velocidade de movimento entre slots (maior = mais rápido)
+const ARRIVAL_THRESHOLD = 0.1; // Distância mínima para considerar que chegou ao waypoint
 
 // -----------------------------------------------------------------------------
 // Componente de carregamento do Modelo (Puro, pode suspender ou lançar erro)
@@ -63,6 +67,42 @@ class GLBErrorBoundary extends React.Component<
 }
 
 // -----------------------------------------------------------------------------
+// Helper: Gerar waypoints entre posição atual e destino (slot a slot)
+// -----------------------------------------------------------------------------
+function generateWaypoints(fromSlot: number, toSlot: number): number[] {
+    const waypoints: number[] = [];
+
+    if (fromSlot === toSlot) return waypoints;
+
+    // Calcular quantos slots andar (sempre para a frente no tabuleiro)
+    let steps = toSlot - fromSlot;
+    if (steps < 0) {
+        steps += BOARD_SIZE; // Passou pelo início
+    }
+
+    // Gerar cada slot intermédio
+    for (let i = 1; i <= steps; i++) {
+        const slot = (fromSlot + i) % BOARD_SIZE;
+        waypoints.push(slot);
+    }
+
+    return waypoints;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: Obter posição 3D a partir do índice do tabuleiro
+// -----------------------------------------------------------------------------
+function getPosition(index: number): [number, number, number] {
+    let x = 0, z = 0;
+    const i = index % 40;
+    if (i <= 10) { x = 10 - i * 2; z = 10; }
+    else if (i <= 20) { x = -10; z = 10 - (i - 10) * 2; }
+    else if (i <= 30) { x = -10 + (i - 20) * 2; z = -10; }
+    else { x = 10; z = -10 + (i - 30) * 2; }
+    return [x, 1.0, z]; // y = 1.0 (altura base do peão)
+}
+
+// -----------------------------------------------------------------------------
 // Componente Principal PlayerToken
 // -----------------------------------------------------------------------------
 interface PlayerProps {
@@ -73,34 +113,93 @@ export const PlayerToken: React.FC<PlayerProps> = ({ id }) => {
     const player = useGameStore((state) => state.players.find(p => p.id === id));
     const groupRef = useRef<THREE.Group>(null);
 
-    // Helper to get 3D pos from board index
-    const getPosition = (index: number): [number, number, number] => {
-        let x = 0, z = 0;
-        const i = index % 40;
-        if (i <= 10) { x = 10 - i * 2; z = 10; }
-        else if (i <= 20) { x = -10; z = 10 - (i - 10) * 2; }
-        else if (i <= 30) { x = -10 + (i - 20) * 2; z = -10; }
-        else { x = 10; z = -10 + (i - 30) * 2; }
-        return [x, 0.5 + 0.5, z];
-    };
+    // Estado da animação
+    const [waypoints, setWaypoints] = useState<number[]>([]);
+    const [currentWaypointIndex, setCurrentWaypointIndex] = useState(0);
+    const [lastKnownPosition, setLastKnownPosition] = useState<number>(0);
+    const [isMoving, setIsMoving] = useState(false);
+
+    // Quando a posição do jogador muda, gerar novos waypoints
+    useEffect(() => {
+        if (!player) return;
+
+        const targetSlot = player.position;
+
+        // Se a posição mudou, calcular caminho
+        if (targetSlot !== lastKnownPosition) {
+            const newWaypoints = generateWaypoints(lastKnownPosition, targetSlot);
+
+            if (newWaypoints.length > 0) {
+                setWaypoints(newWaypoints);
+                setCurrentWaypointIndex(0);
+                setIsMoving(true);
+            }
+
+            setLastKnownPosition(targetSlot);
+        }
+    }, [player?.position, lastKnownPosition]);
+
+    // Callback para avançar para o próximo waypoint
+    const advanceWaypoint = useCallback(() => {
+        if (currentWaypointIndex < waypoints.length - 1) {
+            setCurrentWaypointIndex(prev => prev + 1);
+        } else {
+            // Chegou ao destino final
+            setIsMoving(false);
+            setWaypoints([]);
+            setCurrentWaypointIndex(0);
+        }
+    }, [currentWaypointIndex, waypoints.length]);
 
     if (!player) return null;
 
-    const targetPos = getPosition(player.position);
     const color = player.color;
     const modelPath = getModelPath(color);
     const modelScale = getModelScale(color);
 
-    useFrame((state, delta) => {
-        if (groupRef.current) {
-            groupRef.current.position.lerp(new THREE.Vector3(...targetPos), delta * 5);
-            groupRef.current.rotation.y += delta;
-            groupRef.current.position.y = targetPos[1] + Math.sin(state.clock.elapsedTime * 5) * 0.2;
+    // Determinar a posição alvo atual
+    const getCurrentTargetPosition = (): [number, number, number] => {
+        if (isMoving && waypoints.length > 0) {
+            return getPosition(waypoints[currentWaypointIndex]);
         }
+        return getPosition(player.position);
+    };
+
+    useFrame((state, delta) => {
+        if (!groupRef.current) return;
+
+        const targetPos = getCurrentTargetPosition();
+        const targetVec = new THREE.Vector3(...targetPos);
+        const currentPos = groupRef.current.position.clone();
+
+        // Calcular distância até ao waypoint atual
+        const distanceXZ = Math.sqrt(
+            Math.pow(targetVec.x - currentPos.x, 2) +
+            Math.pow(targetVec.z - currentPos.z, 2)
+        );
+
+        // Se está perto o suficiente do waypoint atual, avançar para o próximo
+        if (isMoving && distanceXZ < ARRIVAL_THRESHOLD) {
+            advanceWaypoint();
+        }
+
+        // Interpolar suavemente em direção ao waypoint atual
+        groupRef.current.position.lerp(targetVec, delta * MOVE_SPEED);
+
+        // Rotação contínua do peão
+        groupRef.current.rotation.y += delta * (isMoving ? 3 : 1); // Roda mais rápido quando a mover
+
+        // Efeito de bounce vertical
+        const bounceAmplitude = isMoving ? 0.3 : 0.15; // Bounce maior quando a mover
+        const bounceSpeed = isMoving ? 8 : 5;
+        groupRef.current.position.y = targetPos[1] + Math.sin(state.clock.elapsedTime * bounceSpeed) * bounceAmplitude;
     });
 
+    // Posição inicial do grupo
+    const initialPos = getPosition(lastKnownPosition);
+
     return (
-        <group ref={groupRef} position={targetPos}>
+        <group ref={groupRef} position={initialPos}>
             {/* Decisão: Renderizar Modelo ou Fallback */}
             {modelPath ? (
                 <GLBErrorBoundary fallback={<CubeFallback color={color} />}>

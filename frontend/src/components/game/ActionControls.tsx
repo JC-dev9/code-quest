@@ -1,19 +1,19 @@
-import { Dices, Sparkles } from 'lucide-react';
+import { Dices } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 
 export const ActionControls = () => {
     const { diceValue, isRolling, rollDice, currentPlayerIndex, players, localPlayerId } = useGameStore();
 
     if (diceValue || isRolling && !diceValue) {
-         // if just rolling, show rolling state. If rolled (diceValue set), this component actually hides?
-         // Checking original GameUI logic: 
-         // {!diceValue && !isRolling && ( LANÇAR DADOS )}
-         // {isRolling && ( A PROCESSAR )}
-         // So if diceValue is present, this area is hidden or replaced by DiceDisplay logic?
-         // In original GameUI, DiceDisplay is separate, but bottom controls are hidden when diceValue exists.
-         // Let's replicate that logic.
+        // if just rolling, show rolling state. If rolled (diceValue set), this component actually hides?
+        // Checking original GameUI logic: 
+        // {!diceValue && !isRolling && ( LANÇAR DADOS )}
+        // {isRolling && ( A PROCESSAR )}
+        // So if diceValue is present, this area is hidden or replaced by DiceDisplay logic?
+        // In original GameUI, DiceDisplay is separate, but bottom controls are hidden when diceValue exists.
+        // Let's replicate that logic.
     }
-    
+
     // We only show controls if we are NOT showing dice display results (unless rolling)
     if (diceValue && !isRolling) return null;
 
@@ -30,12 +30,12 @@ export const ActionControls = () => {
                 >
                     {/* Shimmer Effect */}
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    
+
                     {/* Glow Effect */}
                     {isMyTurn && (
                         <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 rounded-full blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-300"></div>
                     )}
-                    
+
                     <span className="relative flex items-center gap-4">
                         LANÇAR DADOS
                         <Dices className={`w-10 h-10 ${isMyTurn ? 'group-hover:rotate-[360deg] group-hover:scale-125' : ''} transition-all duration-700`} />
