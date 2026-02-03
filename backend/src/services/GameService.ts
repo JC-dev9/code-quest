@@ -12,15 +12,12 @@ export class GameService {
     private gamePhase: GamePhase;
     private currentQuestion: Question | null = null;
     private pendingPurchaseId: number | null = null;
-    
+
     // Callback para notificar mudanças de estado
     private onStateChange: ((state: GameStateData) => void) | null = null;
 
     constructor() {
-        this.players = [
-            { id: 1, color: '#ff0000', position: 0, money: INITIAL_MONEY, properties: [], clientId: null, purchaseAttemptUsed: false },
-            { id: 2, color: '#0000ff', position: 0, money: INITIAL_MONEY, properties: [], clientId: null, purchaseAttemptUsed: false },
-        ];
+        this.players = []; // Initialize with empty array, players created dynamically
         this.currentPlayerIndex = 0;
         this.diceValue = null;
         this.isRolling = false;
@@ -52,16 +49,30 @@ export class GameService {
     }
 
     public joinGame(clientId: string): number | null {
+        // Check if player already joined
         const existingPlayer = this.players.find(p => p.clientId === clientId);
         if (existingPlayer) return existingPlayer.id;
 
-        const availablePlayer = this.players.find(p => p.clientId === null);
-        if (availablePlayer) {
-            availablePlayer.clientId = clientId;
-            return availablePlayer.id;
+        // Check for available slot (max 2 players)
+        if (this.players.length >= 2) {
+            return null; // Room is full
         }
 
-        return null;
+        // Create new player dynamically
+        const playerId = this.players.length + 1;
+        const playerColors = ['#ff0000', '#0000ff']; // Red and Blue
+        const newPlayer: Player = {
+            id: playerId,
+            color: playerColors[playerId - 1],
+            position: 0,
+            money: INITIAL_MONEY,
+            properties: [],
+            clientId: clientId,
+            purchaseAttemptUsed: false
+        };
+
+        this.players.push(newPlayer);
+        return playerId;
     }
 
     public startGame() {
@@ -155,7 +166,7 @@ export class GameService {
 
     public requestPurchase(clientId: string): boolean {
         if (this.gamePhase !== 'PLAYING' || !this.validateAction(clientId)) return false;
-        
+
         const player = this.players[this.currentPlayerIndex];
         if (player.purchaseAttemptUsed) return false;
 
@@ -172,7 +183,7 @@ export class GameService {
 
     public answerQuestion(clientId: string, optionIndex: number): boolean {
         if (!this.validateAction(clientId) || !this.currentQuestion || this.pendingPurchaseId === null) return false;
-        
+
         const player = this.players[this.currentPlayerIndex];
         const space = this.boardConfig[this.pendingPurchaseId];
         const isCorrect = optionIndex === this.currentQuestion.correctIndex;
@@ -206,7 +217,7 @@ export class GameService {
 
     public nextTurn(clientId: string) {
         if (this.gamePhase !== 'PLAYING' || !this.validateAction(clientId)) return;
-        
+
         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
         this.diceValue = null;
         this.players[this.currentPlayerIndex].purchaseAttemptUsed = false;

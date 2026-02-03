@@ -64,10 +64,7 @@ export class GameState {
     ];
 
     constructor() {
-        this.players = [
-            { id: 1, color: '#ff0000', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
-            { id: 2, color: '#0000ff', position: 0, money: 500, properties: [], clientId: null, purchaseAttemptUsed: false },
-        ];
+        this.players = []; // Initialize with empty array, players created dynamically
         this.currentPlayerIndex = 0;
         this.diceValue = null;
         this.isRolling = false;
@@ -218,16 +215,30 @@ export class GameState {
     }
 
     public joinGame(clientId: string): number | null {
+        // Check if player already joined
         const existingPlayer = this.players.find(p => p.clientId === clientId);
         if (existingPlayer) return existingPlayer.id;
 
-        const availablePlayer = this.players.find(p => p.clientId === null);
-        if (availablePlayer) {
-            availablePlayer.clientId = clientId;
-            return availablePlayer.id;
+        // Check for available slot (max 2 players)
+        if (this.players.length >= 2) {
+            return null; // Room is full
         }
 
-        return null;
+        // Create new player dynamically
+        const playerId = this.players.length + 1;
+        const playerColors = ['#ff0000', '#0000ff']; // Red and Blue
+        const newPlayer: Player = {
+            id: playerId,
+            color: playerColors[playerId - 1],
+            position: 0,
+            money: 500,
+            properties: [],
+            clientId: clientId,
+            purchaseAttemptUsed: false
+        };
+
+        this.players.push(newPlayer);
+        return playerId;
     }
 
     private validateAction(clientId: string): boolean {
