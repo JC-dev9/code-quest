@@ -105,7 +105,7 @@ function App() {
               </group>
 
               <Environment preset="city" />
-              <Sky distance={450000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25} />
+              <Sky distance={450000} sunPosition={[1, 0.1, 1]} azimuth={0.25} />
               <OrbitControls
                 minPolarAngle={0}
                 maxPolarAngle={Math.PI / 2.5}

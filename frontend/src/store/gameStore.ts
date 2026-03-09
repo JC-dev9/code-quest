@@ -83,6 +83,7 @@ interface GameState {
     winnerId: number | null;
     lastEvent: GameEvent | null;
     awaitingChatGPTChoice: boolean;
+    isTokenMoving: boolean;
 
     // Estado da Conexão
     socket: Socket | null;
@@ -103,6 +104,7 @@ interface GameState {
     sellProperty: (id: number) => Promise<void>;
     chatGPTChooseSpace: (spaceId: number) => void;
     clearEvent: () => void;
+    setTokenMoving: (moving: boolean) => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -124,6 +126,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     winnerId: null,
     lastEvent: null,
     awaitingChatGPTChoice: false,
+    isTokenMoving: false,
     socket: null,
     isLoading: false,
     error: null,
@@ -342,5 +345,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     clearEvent: () => {
         set({ lastEvent: null });
+    },
+
+    setTokenMoving: (moving: boolean) => {
+        set({ isTokenMoving: moving });
     },
 }));

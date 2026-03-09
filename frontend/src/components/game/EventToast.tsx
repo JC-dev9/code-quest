@@ -60,7 +60,7 @@ export const EventToast = () => {
                     <Icon className={`w-4 h-4 ${config.colorClass.split(' ')[0]}`} />
                 </div>
                 <p className="text-zinc-100 font-medium text-sm leading-snug">
-                    {currentEvent.message}
+                    {currentEvent.message.replace(/[\u{1F300}-\u{1FAFF}]|[\u{2600}-\u{27BF}]|[\u{2B00}-\u{2BFF}]|[\u{FE00}-\u{FE0F}]|[\u{1F000}-\u{1F9FF}]/gu, '').trim()}
                 </p>
                 {currentEvent.amount !== undefined && (
                     <div className="flex-shrink-0 bg-zinc-800 border border-zinc-700 px-2.5 py-0.5 rounded-full ml-2">

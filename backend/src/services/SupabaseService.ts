@@ -55,6 +55,7 @@ class SupabaseService {
     private client: SupabaseClient;
     private static instance: SupabaseService | null = null;
     private questionsCache: Question[] = [];
+    private isConfigured: boolean = false;
 
     private constructor() {
         const url = process.env.SUPABASE_URL;
@@ -62,12 +63,14 @@ class SupabaseService {
 
         if (!url || !key) {
             console.warn('⚠️  Variáveis SUPABASE_URL ou SUPABASE_ANON_KEY não definidas. Persistência desativada.');
-            // Criar cliente dummy para não crashar
+            // Criar cliente dummy para não crashar (nunca será chamado graças ao isConfigured)
             this.client = createClient('https://placeholder.supabase.co', 'placeholder');
+            this.isConfigured = false;
             return;
         }
 
         this.client = createClient(url, key);
+        this.isConfigured = true;
         console.log('✅ SupabaseService inicializado com sucesso');
     }
 
@@ -89,6 +92,7 @@ class SupabaseService {
         status: 'WAITING' | 'PLAYING' | 'FINISHED' = 'PLAYING',
         playerCount: number = 0
     ): Promise<boolean> {
+        if (!this.isConfigured) return false; // Silenciosamente ignorar se não configurado
         try {
             const { error } = await this.client
                 .from('rooms')
@@ -105,13 +109,14 @@ class SupabaseService {
             }
             return true;
         } catch (err) {
-            console.error('❌ Exceção ao guardar sala:', err);
+            console.error('❌ Erro ao guardar sala:', err);
             return false;
         }
     }
 
     /** Carregar o estado de uma sala para reconexão */
     public async loadRoomState(code: string): Promise<DbRoom | null> {
+        if (!this.isConfigured) return null;
         try {
             const { data, error } = await this.client
                 .from('rooms')
@@ -299,6 +304,10 @@ class SupabaseService {
 
     /** Carregar e mapear todas as perguntas aprovadas e as suas opções */
     public async loadAllQuestions(): Promise<void> {
+        if (!this.isConfigured) {
+            console.warn('⚠️  Supabase não configurado. Nenhuma pergunta será carregada (modo offline).');
+            return;
+        }
         try {
             console.log('⏳ A carregar perguntas do Supabase...');
             const { data, error } = await this.client

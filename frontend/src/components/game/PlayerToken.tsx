@@ -111,6 +111,7 @@ interface PlayerProps {
 
 export const PlayerToken: React.FC<PlayerProps> = ({ id }) => {
     const player = useGameStore((state) => state.players.find(p => p.id === id));
+    const setTokenMoving = useGameStore((state) => state.setTokenMoving);
     const groupRef = useRef<THREE.Group>(null);
 
     // Estado da animação
@@ -133,11 +134,12 @@ export const PlayerToken: React.FC<PlayerProps> = ({ id }) => {
                 setWaypoints(newWaypoints);
                 setCurrentWaypointIndex(0);
                 setIsMoving(true);
+                setTokenMoving(true); // Notificar store que o token está a mover
             }
 
             setLastKnownPosition(targetSlot);
         }
-    }, [player?.position, lastKnownPosition]);
+    }, [player?.position, lastKnownPosition, setTokenMoving]);
 
     // Callback para avançar para o próximo waypoint
     const advanceWaypoint = useCallback(() => {
@@ -148,8 +150,9 @@ export const PlayerToken: React.FC<PlayerProps> = ({ id }) => {
             setIsMoving(false);
             setWaypoints([]);
             setCurrentWaypointIndex(0);
+            setTokenMoving(false); // Notificar store que o token parou
         }
-    }, [currentWaypointIndex, waypoints.length]);
+    }, [currentWaypointIndex, waypoints.length, setTokenMoving]);
 
     if (!player) return null;
 

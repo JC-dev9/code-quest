@@ -445,6 +445,8 @@ export class GameService {
             this.emitEvent('PROPERTY_BOUGHT', player.id, `🏢 ${player.displayName} comprou ${space.name} por ${space.price} DG!`, { amount: space.price });
             this.emitEvent('ANSWER_CORRECT', player.id, `✅ Resposta correta!`);
         } else {
+            // A compra falhou, remover o bloqueio para permitir nova tentativa
+            player.purchaseAttemptUsed = false;
             this.emitEvent('ANSWER_WRONG', player.id, `❌ Resposta errada! ${player.displayName} não conseguiu comprar ${space.name}.`);
         }
 

@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const DiceDisplay = () => {
     const { 
         diceValue, isRolling, currentPlayerIndex, players, boardConfig, 
-        requestPurchase, nextTurn, localPlayerId 
+        requestPurchase, nextTurn, localPlayerId, currentQuestion, isTokenMoving
     } = useGameStore();
 
-    if (diceValue === null || isRolling) return null;
+    if (diceValue === null || isRolling || currentQuestion || isTokenMoving) return null;
 
     const currentPlayer = players[currentPlayerIndex];
     const isMyTurn = localPlayerId === (currentPlayer?.id);

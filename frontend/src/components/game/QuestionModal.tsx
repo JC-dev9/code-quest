@@ -19,6 +19,19 @@ export const QuestionModal = () => {
         }
     }, [currentQuestion]);
 
+    const handleAnswer = useCallback((idx: number) => {
+        if (!currentQuestion || !players[currentPlayerIndex] || localPlayerId !== players[currentPlayerIndex]?.id || showResult || selectedAnswer !== null) return;
+
+        setSelectedAnswer(idx);
+        const correct = idx === currentQuestion.correctIndex;
+        setIsCorrect(correct);
+        setShowResult(true);
+
+        setTimeout(() => {
+            answerQuestion(idx);
+        }, 1500);
+    }, [showResult, selectedAnswer, currentQuestion?.correctIndex, answerQuestion, players, currentPlayerIndex, localPlayerId]);
+
     if (!currentQuestion) return null;
 
     const currentPlayer = players[currentPlayerIndex];
@@ -39,19 +52,6 @@ export const QuestionModal = () => {
 
     const config = getLevelConfig();
     const LevelIcon = config.icon;
-
-    const handleAnswer = useCallback((idx: number) => {
-        if (!isMyTurn || showResult || selectedAnswer !== null) return;
-
-        setSelectedAnswer(idx);
-        const correct = idx === currentQuestion.correctIndex;
-        setIsCorrect(correct);
-        setShowResult(true);
-
-        setTimeout(() => {
-            answerQuestion(idx);
-        }, 1500);
-    }, [isMyTurn, showResult, selectedAnswer, currentQuestion.correctIndex, answerQuestion]);
 
     const getOptionVariant = (idx: number) => {
         if (!showResult) return 'outline';
