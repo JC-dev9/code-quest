@@ -1,5 +1,6 @@
 import { GameService } from './GameService';
 import { ROOM_TIMEOUT_MS, MAX_PLAYERS } from '../config/constants';
+import SupabaseService from './SupabaseService';
 
 export interface Room {
     code: string;
@@ -11,6 +12,11 @@ export interface Room {
 
 export class RoomService {
     private rooms: Map<string, Room> = new Map();
+    private supabase: SupabaseService;
+
+    constructor() {
+        this.supabase = SupabaseService.getInstance();
+    }
 
     private generateRoomCode(): string {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -26,14 +32,20 @@ export class RoomService {
 
     public createRoom(hostSocketId: string): Room {
         const code = this.generateRoomCode();
+        const gameService = new GameService();
+        gameService.setRoomCode(code);
+
         const room: Room = {
             code,
             hostSocketId,
             playerSockets: new Set([hostSocketId]),
-            gameService: new GameService(),
+            gameService,
             createdAt: new Date()
         };
         this.rooms.set(code, room);
+
+        // Persistir sala no Supabase
+        this.supabase.saveRoomState(code, gameService.getState(), 'WAITING', 0);
 
         // Limpeza automática após timeout (2 horas)
         setTimeout(() => {
@@ -69,6 +81,42 @@ export class RoomService {
         return this.rooms.get(code) || null;
     }
 
+    /** Tentar recuperar uma sala do Supabase se não existir em memória */
+    public async recoverRoom(code: string): Promise<Room | null> {
+        // Primeiro verifica memória
+        const memRoom = this.rooms.get(code);
+        if (memRoom) return memRoom;
+
+        // Tentar carregar do Supabase
+        const dbRoom = await this.supabase.loadRoomState(code);
+        if (!dbRoom || dbRoom.status === 'FINISHED') return null;
+
+        // Recriar a sala em memória a partir do estado do Supabase
+        const gameService = new GameService();
+        gameService.setRoomCode(code);
+        gameService.restoreFromState(dbRoom.game_state);
+
+        const room: Room = {
+            code,
+            hostSocketId: '', // Será atualizado quando o host reconectar
+            playerSockets: new Set(),
+            gameService,
+            createdAt: new Date(dbRoom.created_at)
+        };
+
+        this.rooms.set(code, room);
+        console.log(`♻️ Sala ${code} recuperada do Supabase`);
+
+        // Auto-cleanup após timeout
+        setTimeout(() => {
+            if (this.rooms.has(code) && this.rooms.get(code)!.playerSockets.size === 0) {
+                this.removeRoom(code);
+            }
+        }, ROOM_TIMEOUT_MS);
+
+        return room;
+    }
+
     public getRoomBySocket(socketId: string): Room | null {
         for (const room of this.rooms.values()) {
             if (room.playerSockets.has(socketId)) {
@@ -101,6 +149,8 @@ export class RoomService {
 
     private removeRoom(code: string): void {
         this.rooms.delete(code);
-        console.log(`🗑️  Sala ${code} removida`);
+        // Remover também do Supabase
+        this.supabase.removeRoom(code);
+        console.log(`🗑️ Sala ${code} removida`);
     }
 }

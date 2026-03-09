@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 
-// Definição dos tipos principais do jogo
+// ============================================================
+// Tipos partilhados (espelho dos tipos do backend)
+// ============================================================
+
 export type Player = {
     id: number;
     color: string;
@@ -10,9 +13,12 @@ export type Player = {
     properties: number[];
     purchaseAttemptUsed: boolean;
     initialRoll?: number;
+    skipTurns: number;
+    isBankrupt: boolean;
+    displayName: string;
 };
 
-export type GamePhase = 'WAITING' | 'INITIAL_ROLL' | 'PLAYING';
+export type GamePhase = 'WAITING' | 'INITIAL_ROLL' | 'PLAYING' | 'FINISHED';
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
 
 export type SpaceData = {
@@ -32,6 +38,26 @@ export interface Question {
     options: string[];
     correctIndex: number;
     level: SpaceLevel;
+}
+
+export type GameEventType =
+    | 'RENT_PAID'
+    | 'PROPERTY_BOUGHT'
+    | 'PASSED_START'
+    | 'AUDIT_TAX'
+    | 'COFFEE_BREAK'
+    | 'CHATGPT_MOVE'
+    | 'PLAYER_BANKRUPT'
+    | 'GAME_OVER'
+    | 'ANSWER_CORRECT'
+    | 'ANSWER_WRONG';
+
+export interface GameEvent {
+    type: GameEventType;
+    playerId: number;
+    message: string;
+    amount?: number;
+    targetPlayerId?: number;
 }
 
 type ViewState = 'menu' | 'lobby' | 'game';
@@ -54,6 +80,9 @@ interface GameState {
     currentQuestion: Question | null;
     pendingPurchaseId: number | null;
     gamePhase: GamePhase;
+    winnerId: number | null;
+    lastEvent: GameEvent | null;
+    awaitingChatGPTChoice: boolean;
 
     // Estado da Conexão
     socket: Socket | null;
@@ -72,6 +101,8 @@ interface GameState {
     requestPurchase: () => Promise<void>;
     answerQuestion: (index: number) => Promise<void>;
     sellProperty: (id: number) => Promise<void>;
+    chatGPTChooseSpace: (spaceId: number) => void;
+    clearEvent: () => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -90,6 +121,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     currentQuestion: null,
     pendingPurchaseId: null,
     gamePhase: 'WAITING',
+    winnerId: null,
+    lastEvent: null,
+    awaitingChatGPTChoice: false,
     socket: null,
     isLoading: false,
     error: null,
@@ -106,7 +140,6 @@ export const useGameStore = create<GameState>((set, get) => ({
                 try {
                     const { roomCode, playerId } = JSON.parse(session);
                     console.log('🔄 Tentando reconectar à sessão anterior...', roomCode);
-                    console.log('Player ID:', playerId);
                     socket.emit('rejoin-room', { roomCode, playerId });
                 } catch (e) {
                     console.error('Erro ao ler sessão salva:', e);
@@ -125,7 +158,17 @@ export const useGameStore = create<GameState>((set, get) => ({
                 viewState: 'lobby',
                 isLoading: false,
                 error: null,
-                ...gameState
+                players: gameState.players,
+                currentPlayerIndex: gameState.currentPlayerIndex,
+                diceValue: gameState.diceValue,
+                boardConfig: gameState.boardConfig,
+                isRolling: gameState.isRolling,
+                currentQuestion: gameState.currentQuestion,
+                pendingPurchaseId: gameState.pendingPurchaseId,
+                gamePhase: gameState.gamePhase,
+                winnerId: gameState.winnerId ?? null,
+                lastEvent: gameState.lastEvent ?? null,
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
             });
         });
 
@@ -133,8 +176,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             console.log('✅ Entrou na sala:', code);
             localStorage.setItem('codequest_session', JSON.stringify({ roomCode: code, playerId }));
 
-            // Se o jogo já estiver em andamento, vai direto para a tela do jogo
-            const targetView = (gameState.gamePhase === 'INITIAL_ROLL' || gameState.gamePhase === 'PLAYING')
+            // Se o jogo já estiver em andamento, ir direto para o ecrã do jogo
+            const targetView = (gameState.gamePhase === 'INITIAL_ROLL' || gameState.gamePhase === 'PLAYING' || gameState.gamePhase === 'FINISHED')
                 ? 'game'
                 : 'lobby';
 
@@ -145,30 +188,49 @@ export const useGameStore = create<GameState>((set, get) => ({
                 viewState: targetView,
                 isLoading: false,
                 error: null,
-                ...gameState
+                players: gameState.players,
+                currentPlayerIndex: gameState.currentPlayerIndex,
+                diceValue: gameState.diceValue,
+                boardConfig: gameState.boardConfig,
+                isRolling: gameState.isRolling,
+                currentQuestion: gameState.currentQuestion,
+                pendingPurchaseId: gameState.pendingPurchaseId,
+                gamePhase: gameState.gamePhase,
+                winnerId: gameState.winnerId ?? null,
+                lastEvent: gameState.lastEvent ?? null,
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
             });
         });
 
         socket.on('game-state-updated', (gameState) => {
-            console.log('🔄 Estado do jogo atualizado');
-            set({ ...gameState });
+            set({
+                players: gameState.players,
+                currentPlayerIndex: gameState.currentPlayerIndex,
+                diceValue: gameState.diceValue,
+                boardConfig: gameState.boardConfig,
+                isRolling: gameState.isRolling,
+                currentQuestion: gameState.currentQuestion,
+                pendingPurchaseId: gameState.pendingPurchaseId,
+                gamePhase: gameState.gamePhase,
+                winnerId: gameState.winnerId ?? null,
+                lastEvent: gameState.lastEvent ?? null,
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
+            });
         });
 
-        socket.on('error', ({ message }) => {
+        socket.on('error', ({ message }: { message: string }) => {
             console.error('❌ Erro:', message);
             set({ error: message, isLoading: false });
         });
 
-        socket.on('player-disconnected', ({ socketId }) => {
+        socket.on('player-disconnected', ({ socketId }: { socketId: string }) => {
             console.log('👋 Jogador desconectado:', socketId);
         });
 
         socket.on('disconnect', () => {
             console.log('🔌 Desconectado do servidor');
             set({
-                viewState: 'menu',
-                roomCode: null,
-                error: 'Desconectado do servidor'
+                error: 'Desconectado do servidor. Tentando reconectar...'
             });
         });
 
@@ -212,7 +274,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             isHost: false,
             localPlayerId: null,
             players: [],
-            error: null
+            error: null,
+            winnerId: null,
+            lastEvent: null,
+            awaitingChatGPTChoice: false
         });
     },
 
@@ -229,7 +294,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         set({ isRolling: true });
 
-        // Simula delay de animação para UX
+        // Simulação de delay de animação para UX
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         socket.emit('roll-dice');
@@ -267,6 +332,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         socket.emit('sell-property', id);
     },
+
+    chatGPTChooseSpace: (spaceId: number) => {
+        const { socket } = get();
+        if (!socket) return;
+
+        socket.emit('chatgpt-choose-space', spaceId);
+    },
+
+    clearEvent: () => {
+        set({ lastEvent: null });
+    },
 }));
-
-
