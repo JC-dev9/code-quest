@@ -1,5 +1,6 @@
 import { AlertCircle, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const DiceDisplay = () => {
     const { 
@@ -19,22 +20,38 @@ export const DiceDisplay = () => {
         !currentPlayer.purchaseAttemptUsed;
 
     return (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex flex-col items-center gap-6 animate-slide-in">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex flex-col items-center gap-6 z-50">
             {/* Dice Display - 3D Style */}
-            <div className="flex gap-5 animate-bounce-short">
-                {diceValue.map((v, i) => (
-                    <div 
-                        key={i} 
-                        className="relative bg-gradient-to-br from-white to-gray-100 w-24 h-24 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex items-center justify-center border-4 border-white/50 transform hover:scale-110 transition-transform duration-300"
-                        style={{
-                            transform: `perspective(1000px) rotateX(${i * 5}deg) rotateY(${i * 10}deg)`,
-                            animationDelay: `${i * 0.1}s`
-                        }}
-                    >
-                        <span className="text-6xl font-black text-slate-900 drop-shadow-md">{v}</span>
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 to-transparent"></div>
-                    </div>
-                ))}
+            <div className="flex gap-5">
+                <AnimatePresence>
+                    {diceValue.map((v, i) => (
+                        <motion.div 
+                            key={i} 
+                            initial={{ scale: 0, rotateX: 180, rotateY: 180, y: -50, opacity: 0 }}
+                            animate={{ 
+                                scale: 1, 
+                                rotateX: i * 5, 
+                                rotateY: i * 10, 
+                                y: 0, 
+                                opacity: 1 
+                            }}
+                            transition={{ 
+                                type: "spring", 
+                                stiffness: 200, 
+                                damping: 15,
+                                delay: i * 0.1 
+                            }}
+                            className="relative bg-gradient-to-br from-white to-gray-100 w-24 h-24 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] flex items-center justify-center border-4 border-white/50"
+                            style={{
+                                transformPerspective: 1000,
+                            }}
+                            whileHover={{ scale: 1.1, rotateY: 0, rotateX: 0 }}
+                        >
+                            <span className="text-6xl font-black text-slate-900 drop-shadow-md">{v}</span>
+                            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 to-transparent"></div>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
             </div>
 
             {/* Total Display */}

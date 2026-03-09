@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useGameStore, GameEvent } from '../../store/gameStore';
+import { useGameStore, type GameEvent } from '../../store/gameStore';
 import { Coins, ShieldAlert, Coffee, Bot, Skull, Trophy, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
 // ============================================================
