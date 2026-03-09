@@ -1,5 +1,8 @@
 import { useGameStore } from '../../store/gameStore';
-import { Coins, User, TrendingUp } from 'lucide-react';
+import { Coins, User, TrendingUp, Sparkles } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export const TopBar = () => {
     const { players, currentPlayerIndex, localPlayerId } = useGameStore();
@@ -7,17 +10,21 @@ export const TopBar = () => {
     return (
         <div className="flex justify-between items-start pointer-events-auto gap-4">
             {/* Logo/Brand */}
-            <div className="bg-gradient-to-br from-slate-900/90 to-purple-900/90 backdrop-blur-xl p-5 rounded-2xl border-2 border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.3)] group hover:scale-105 transition-all duration-300">
-                <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-500 animate-gradient mb-1">
-                    CODE QUEST
-                </h1>
-                <p className="text-[10px] tracking-[0.2em] text-purple-300 uppercase font-bold">DigiCoin Network</p>
-                {localPlayerId && (
-                    <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 py-1 px-2 rounded-full border border-emerald-500/30">
-                        <User className="w-3 h-3" />
-                        Jogador {localPlayerId}
-                    </div>
-                )}
+            <div className="bg-zinc-950/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-zinc-800 shadow-lg flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-5 h-5 text-indigo-400" />
+                    <h1 className="text-2xl font-black text-zinc-50 tracking-tight leading-none">
+                        CODE QUEST
+                    </h1>
+                </div>
+                <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-widest text-zinc-500 uppercase font-bold">Monopoly Edition</p>
+                    {localPlayerId && (
+                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-0.5 px-2 rounded-full ml-3">
+                            ID: {localPlayerId}
+                        </span>
+                    )}
+                </div>
             </div>
 
             {/* Player Cards */}
@@ -27,73 +34,63 @@ export const TopBar = () => {
                     const isYou = p.id === localPlayerId;
                     
                     return (
-                        <div 
+                        <Card 
                             key={p.id} 
-                            className={`relative bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl p-4 rounded-2xl border-2 transition-all duration-500 ${
+                            className={`relative bg-zinc-950/90 backdrop-blur-md p-3 border transition-all duration-300 ${
                                 isActive 
-                                    ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.5)] scale-110 -translate-y-2' 
-                                    : 'border-white/10 opacity-80 hover:opacity-100'
+                                    ? 'border-indigo-500 shadow-md scale-105' 
+                                    : 'border-zinc-800 opacity-90'
                             }`}
                         >
                             {/* Active Indicator */}
                             {isActive && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
                             )}
                             
                             {/* You Badge */}
                             {isYou && (
-                                <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider shadow-lg">
-                                    VOCÊ
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                    <Badge className="bg-zinc-100 hover:bg-zinc-100 text-zinc-900 border-none font-bold uppercase text-[9px] px-2 py-0">You</Badge>
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-3">
-                                {/* Avatar com cor do jogador */}
-                                <div className="relative">
-                                    <div 
-                                        className="w-12 h-12 rounded-xl shadow-lg flex items-center justify-center font-black text-2xl text-white border-2 border-white/20" 
-                                        style={{ backgroundColor: p.color }}
-                                    >
+                            <div className="flex items-center gap-4">
+                                {/* Avatar */}
+                                <Avatar className={`w-12 h-12 border-2 ${isActive ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-zinc-950' : 'border-zinc-800'}`} style={{ borderColor: isActive ? undefined : p.color }}>
+                                    <AvatarFallback className="text-zinc-950 font-black text-xl" style={{ backgroundColor: p.color }}>
                                         {p.id}
-                                    </div>
-                                    {isActive && (
-                                        <div className="absolute inset-0 rounded-xl" style={{ 
-                                            boxShadow: `0 0 20px ${p.color}`,
-                                            animation: 'glow 2s ease-in-out infinite'
-                                        }}></div>
-                                    )}
-                                </div>
+                                    </AvatarFallback>
+                                </Avatar>
 
                                 {/* Player Info */}
                                 <div className="min-w-[100px]">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <User className="w-3 h-3 text-gray-400" />
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                                    <div className="flex items-center gap-1 mb-0.5">
+                                        <User className="w-3 h-3 text-zinc-500" />
+                                        <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">
                                             Player {p.id}
                                         </p>
                                     </div>
                                     
                                     {/* Money Display */}
                                     <div className="flex items-center gap-1">
-                                        <Coins className="w-4 h-4 text-yellow-400" />
-                                        <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 leading-none">
+                                        <Coins className="w-4 h-4 text-emerald-400" />
+                                        <p className="text-xl font-black text-zinc-100 leading-none">
                                             {p.money}
                                         </p>
-                                        <span className="text-xs text-yellow-400/80 font-bold">DG</span>
                                     </div>
 
                                     {/* Properties Count */}
                                     {p.properties.length > 0 && (
                                         <div className="flex items-center gap-1 mt-1">
-                                            <TrendingUp className="w-3 h-3 text-emerald-400" />
-                                            <span className="text-[10px] text-emerald-400 font-bold">
-                                                {p.properties.length} {p.properties.length === 1 ? 'propriedade' : 'propriedades'}
+                                            <TrendingUp className="w-3 h-3 text-indigo-400" />
+                                            <span className="text-[10px] text-zinc-400 font-medium">
+                                                {p.properties.length} prop(s)
                                             </span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </Card>
                     );
                 })}
             </div>

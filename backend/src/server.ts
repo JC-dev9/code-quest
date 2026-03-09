@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import app from './app';
 import { GameController } from './controllers/GameController';
 import os from 'os';
+import SupabaseService from './services/SupabaseService';
 
 const port = 3000;
 
@@ -35,9 +36,17 @@ const getNetworkIp = () => {
     return 'localhost';
 };
 
-httpServer.listen(port, '0.0.0.0', () => {
-    const ip = getNetworkIp();
-    console.log(`🎮 CodeQuest Backend rodando em http://localhost:${port}`);
-    console.log(`🌐 Acesso na rede: http://${ip}:${port}`);
-    console.log(`📱 Para jogar em rede, conecte-se ao IP acima.`);
-});
+const initServer = async () => {
+    // 1. Carregar perguntas do Supabase para cache em memória
+    await SupabaseService.getInstance().loadAllQuestions();
+
+    // 2. Iniciar servidor
+    httpServer.listen(port, '0.0.0.0', () => {
+        const ip = getNetworkIp();
+        console.log(`🎮 CodeQuest Backend rodando em http://localhost:${port}`);
+        console.log(`🌐 Acesso na rede: http://${ip}:${port}`);
+        console.log(`📱 Para jogar em rede, conecte-se ao IP acima.`);
+    });
+};
+
+initServer();

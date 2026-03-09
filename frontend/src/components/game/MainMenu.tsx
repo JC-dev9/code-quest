@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import { Gamepad2, Loader2, LogIn, Lightbulb, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 interface MainMenuProps {
     onCreateRoom: () => void;
@@ -10,7 +14,6 @@ interface MainMenuProps {
 
 export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMenuProps) => {
     const [roomCode, setRoomCode] = useState('');
-    const [isFocused, setIsFocused] = useState(false);
 
     const handleJoin = () => {
         if (roomCode.trim().length === 6) {
@@ -19,109 +22,87 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
     };
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-50 overflow-hidden">
-            {/* Animated Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                <div className="absolute top-0 -right-4 w-96 h-96 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
-            </div>
-
-            <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-2xl rounded-3xl p-12 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/20 max-w-md w-full transform transition-all duration-300 hover:shadow-[0_8px_48px_0_rgba(139,92,246,0.3)]">
-                {/* Título com efeito brilhante */}
-                <div className="text-center mb-10 relative">
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                        <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+        <div className="fixed inset-0 flex items-center justify-center bg-zinc-950 p-4 overflow-hidden z-50">
+            <Card className="w-full max-w-md border-zinc-800 bg-zinc-900 shadow-2xl">
+                <CardHeader className="text-center space-y-4 pb-8">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500/10 mb-2">
+                        <Sparkles className="h-8 w-8 text-indigo-400" />
                     </div>
-                    <h1 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-500 mb-3 drop-shadow-2xl animate-gradient">
+                    <CardTitle className="text-4xl font-black tracking-tight text-zinc-50">
                         CODE QUEST
-                    </h1>
-                    <div className="h-1 w-40 mx-auto bg-gradient-to-r from-transparent via-purple-500 to-transparent rounded-full mb-3"></div>
-                    <p className="text-purple-200 text-lg font-semibold tracking-wide">
+                    </CardTitle>
+                    <CardDescription className="text-base text-zinc-400 font-medium tracking-wide">
                         Monopoly Digital Edition
-                    </p>
-                </div>
+                    </CardDescription>
+                </CardHeader>
+                
+                <CardContent className="space-y-6">
+                    {error && (
+                        <div className="rounded-lg bg-red-500/10 p-4 border border-red-500/20 text-center">
+                            <p className="text-sm font-medium text-red-500">{error}</p>
+                        </div>
+                    )}
 
-                {/* Mensagem de Erro com animação */}
-                {error && (
-                    <div className="mb-6 p-4 bg-red-500/20 border-2 border-red-500/50 rounded-xl text-red-200 text-center animate-shake backdrop-blur-sm">
-                        <p className="font-semibold">{error}</p>
-                    </div>
-                )}
-
-                {/* Botão Criar Sala - Enhanced */}
-                <button
-                    onClick={onCreateRoom}
-                    disabled={isLoading}
-                    className="group relative w-full mb-6 py-5 px-6 bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-black text-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(16,185,129,0.5)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_-10px_rgba(16,185,129,0.7)] disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    <div className="relative flex items-center justify-center gap-3">
+                    <Button 
+                        size="lg" 
+                        onClick={onCreateRoom}
+                        disabled={isLoading}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-14 text-lg"
+                    >
                         {isLoading ? (
-                            <Loader2 className="w-7 h-7 animate-spin" />
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         ) : (
-                            <Gamepad2 className="w-7 h-7 group-hover:rotate-12 transition-transform duration-300" />
+                            <Gamepad2 className="mr-2 h-5 w-5" />
                         )}
-                        <span className="tracking-wide">{isLoading ? 'CRIANDO...' : 'CRIAR SALA'}</span>
-                    </div>
-                </button>
+                        {isLoading ? 'Criando...' : 'Criar Nova Sala'}
+                    </Button>
 
-                {/* Divisor melhorado */}
-                <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                        <span className="px-4 py-1 bg-slate-900/50 backdrop-blur-sm text-purple-300 font-bold text-sm rounded-full border border-purple-400/30">
-                            OU
-                        </span>
-                    </div>
-                </div>
-
-                {/* Entrar na Sala - Enhanced */}
-                <div className="space-y-4">
                     <div className="relative">
-                        <input
+                        <div className="absolute inset-0 flex items-center">
+                            <Separator className="border-zinc-800" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-zinc-900 px-2 text-zinc-500 font-medium">
+                                Ou entrar com código
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Input
                             type="text"
                             value={roomCode}
                             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                             onKeyPress={(e) => e.key === 'Enter' && handleJoin()}
-                            onFocus={() => setIsFocused(true)}
-                            onBlur={() => setIsFocused(false)}
-                            placeholder="CÓDIGO DA SALA"
+                            placeholder="CÓDIGO (6 DÍGITOS)"
                             maxLength={6}
                             disabled={isLoading}
-                            className={`w-full py-4 px-6 bg-white/5 border-2 ${isFocused ? 'border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.4)]' : 'border-white/20'} rounded-2xl text-white text-center text-3xl font-mono font-bold tracking-[0.3em] placeholder-purple-300/40 focus:outline-none transition-all duration-300 disabled:opacity-50 backdrop-blur-sm`}
+                            className="h-14 bg-zinc-950 border-zinc-800 text-center text-xl font-mono font-bold tracking-[0.2em] uppercase focus-visible:ring-indigo-500 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1"
                         />
-                        {roomCode.length > 0 && (
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-500 text-white text-xs px-3 py-1 rounded-full font-bold">
-                                {roomCode.length}/6
-                            </div>
-                        )}
-                    </div>
-                    <button
-                        onClick={handleJoin}
-                        disabled={isLoading || roomCode.length !== 6}
-                        className="group relative w-full py-5 px-6 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 hover:from-blue-700 hover:via-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-black text-xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_-10px_rgba(59,130,246,0.7)] disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                        <div className="relative flex items-center justify-center gap-3">
+                        <Button 
+                            variant="secondary"
+                            size="lg"
+                            onClick={handleJoin}
+                            disabled={isLoading || roomCode.length !== 6}
+                            className="w-full font-bold h-14 text-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700"
+                        >
                             {isLoading ? (
-                                <Loader2 className="w-7 h-7 animate-spin" />
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             ) : (
-                                <LogIn className="w-7 h-7 group-hover:translate-x-1 transition-transform duration-300" />
+                                <LogIn className="mr-2 h-5 w-5" />
                             )}
-                            <span className="tracking-wide">{isLoading ? 'ENTRANDO...' : 'ENTRAR NA SALA'}</span>
-                        </div>
-                    </button>
-                </div>
+                            {isLoading ? 'Entrando...' : 'Entrar na Sala'}
+                        </Button>
+                    </div>
+                </CardContent>
 
-                {/* Info melhorado */}
-                <div className="mt-8 flex items-center justify-center gap-2 text-purple-200/80 text-sm bg-purple-500/10 py-3 px-4 rounded-xl border border-purple-400/20">
-                    <Lightbulb className="w-4 h-4 text-yellow-400 animate-pulse" />
-                    <p className="font-medium">Códigos possuem 6 caracteres</p>
-                </div>
-            </div>
+                <CardFooter className="pt-2 pb-6 flex justify-center">
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
+                        <Lightbulb className="h-4 w-4" />
+                        <span>Requer ligação estável ao servidor</span>
+                    </div>
+                </CardFooter>
+            </Card>
         </div>
     );
 };

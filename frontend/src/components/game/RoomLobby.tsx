@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Gamepad2, Clipboard, Check, Crown, Users, Rocket, Hourglass, LogOut, Star } from 'lucide-react';
+import { Gamepad2, Clipboard, Check, Crown, Users, Rocket, Hourglass, LogOut } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 interface RoomLobbyProps {
     roomCode: string;
@@ -31,155 +36,107 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
     const canStart = players.length >= 2;
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-50 overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 -left-4 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-                <div className="absolute top-0 -right-4 w-96 h-96 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-                <div className="absolute -bottom-8 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
-            </div>
-
-            <div className="relative bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-2xl rounded-3xl p-12 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/20 max-w-2xl w-full animate-slide-in">
-                {/* Título com ícone */}
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-4 mb-4">
-                        <div className="relative">
-                            <Gamepad2 className="w-12 h-12 text-emerald-400 animate-pulse" />
-                            <Star className="w-5 h-5 text-yellow-400 absolute -top-1 -right-1 animate-spin-slow" />
-                        </div>
-                        <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-500">
-                            SALA DE ESPERA
-                        </h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-zinc-950 p-4 z-50">
+            <Card className="w-full max-w-lg border-zinc-800 bg-zinc-900 shadow-2xl">
+                <CardHeader className="text-center pb-6">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 mb-4">
+                        <Gamepad2 className="h-8 w-8 text-emerald-400" />
                     </div>
-                    <div className="flex items-center justify-center gap-2 text-purple-200 bg-purple-500/10 py-2 px-4 rounded-full border border-purple-400/20 inline-flex mx-auto">
+                    <CardTitle className="text-3xl font-black text-zinc-50">SALA DE ESPERA</CardTitle>
+                    <CardDescription className="text-zinc-400 mt-2 flex items-center justify-center gap-2">
                         <Hourglass className="w-4 h-4 animate-spin-slow" />
-                        <p className="font-medium">Aguardando jogadores...</p>
-                    </div>
-                </div>
+                        Aguardando jogadores...
+                    </CardDescription>
+                </CardHeader>
 
-                {/* Código da Sala - Enhanced */}
-                <div className="bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-2xl p-8 mb-8 border-2 border-purple-400/30 shadow-[0_0_40px_rgba(168,85,247,0.2)] backdrop-blur-sm">
-                    <p className="text-purple-200 text-sm mb-3 text-center font-bold uppercase tracking-wider">
-                        Código da Sala
-                    </p>
-                    <div
+                <CardContent className="space-y-6">
+                    {/* Código da Sala */}
+                    <div 
                         onClick={copyRoomCode}
-                        className="cursor-pointer group"
+                        className="group flex flex-col items-center justify-center p-6 bg-zinc-950 rounded-xl border border-zinc-800 cursor-pointer hover:border-emerald-500/50 transition-colors"
                     >
-                        <div className="relative inline-block w-full">
-                            <p className="text-7xl font-mono font-black text-center tracking-[0.3em] mb-3 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-emerald-400 to-cyan-400 group-hover:scale-110 transition-transform duration-300">
-                                {roomCode}
-                            </p>
-                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300"></div>
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Código da Sala</span>
+                        <div className="text-5xl font-mono font-black tracking-[0.2em] text-zinc-100 group-hover:text-emerald-400 transition-colors">
+                            {roomCode}
                         </div>
-                        <div className="flex items-center justify-center gap-2 text-sm bg-white/5 py-2 px-4 rounded-lg border border-white/10 mx-auto w-fit group-hover:bg-white/10 transition-all">
+                        <div className="mt-4 flex items-center gap-2 text-sm font-medium">
                             {copied ? (
-                                <>
-                                    <Check className="w-4 h-4 text-green-400" />
-                                    <p className="text-green-400 font-bold">Copiado!</p>
-                                </>
+                                <span className="flex items-center gap-1 text-emerald-500"><Check className="w-4 h-4" /> Copiado!</span>
                             ) : (
-                                <>
-                                    <Clipboard className="w-4 h-4 text-purple-300" />
-                                    <p className="text-purple-300 font-medium">Clica para copiar</p>
-                                </>
+                                <span className="flex items-center gap-1 text-zinc-500"><Clipboard className="w-4 h-4" /> Copiar código</span>
                             )}
                         </div>
                     </div>
-                </div>
 
-                {/* Lista de Jogadores - Enhanced */}
-                <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/20 backdrop-blur-sm">
-                    <div className="flex items-center justify-center gap-2 mb-5">
-                        <Users className="w-5 h-5 text-cyan-400" />
-                        <p className="text-cyan-200 text-sm font-bold uppercase tracking-wider">
-                            Jogadores ({players.length}/2)
-                        </p>
-                    </div>
-                    <div className="space-y-3">
-                        {players.map((player, index) => (
-                            <div
-                                key={player.id}
-                                className="flex items-center justify-between bg-gradient-to-r from-white/10 to-white/5 rounded-xl p-4 border border-white/10 hover:border-white/30 transition-all duration-300 hover:scale-102 animate-slide-in"
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <div className="relative">
-                                        <div
-                                            className="w-12 h-12 rounded-full border-3 border-white shadow-lg"
-                                            style={{ backgroundColor: player.color }}
-                                        ></div>
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse"></div>
-                                    </div>
-                                    <div>
-                                        <span className="text-white font-bold text-lg block">
-                                            Jogador {index + 1}
-                                        </span>
-                                        <span className="text-purple-300 text-xs uppercase tracking-wider">
-                                            {index === 0 ? 'Anfitrião' : 'Convidado'}
-                                        </span>
-                                    </div>
-                                </div>
-                                {index === 0 && (
-                                    <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-slate-900 px-4 py-2 rounded-full text-sm font-black flex items-center gap-2 shadow-lg">
-                                        <Crown className="w-4 h-4" />
-                                        HOST
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {players.length < 2 && (
-                            <div className="flex items-center justify-center bg-white/5 rounded-xl p-6 border-2 border-dashed border-purple-400/30 gap-3 animate-pulse">
-                                <div className="w-12 h-12 rounded-full border-3 border-dashed border-purple-400/50 flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-purple-400" />
-                                </div>
-                                <span className="text-purple-300 text-lg font-medium">
-                                    À espera do 2º jogador...
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                    <Separator className="bg-zinc-800" />
 
-                {/* Botões de Ação - Enhanced */}
-                <div className="space-y-3">
-                    {isHost && (
-                        <button
+                    {/* Lista de Jogadores */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-zinc-400 text-sm font-medium flex items-center gap-2">
+                                <Users className="w-4 h-4" /> Jogadores
+                            </span>
+                            <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">
+                                {players.length}/2
+                            </Badge>
+                        </div>
+                        
+                        <div className="grid gap-3">
+                            {players.map((player, index) => (
+                                <div key={player.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="h-10 w-10 border-2 border-zinc-900 ring-2" style={{ "--tw-ring-color": player.color } as React.CSSProperties}>
+                                            <AvatarFallback className="bg-zinc-800 text-zinc-300 font-bold" style={{ color: player.color }}>
+                                                J{index + 1}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col">
+                                            <span className="text-zinc-100 font-bold">Jogador {index + 1}</span>
+                                            <span className="text-zinc-500 text-xs">{index === 0 ? 'Anfitrião' : 'Convidado'}</span>
+                                        </div>
+                                    </div>
+                                    {index === 0 && (
+                                        <Badge className="bg-emerald-500/10 text-emerald-500 border-none hover:bg-emerald-500/20">
+                                            <Crown className="w-3 h-3 mr-1" /> Host
+                                        </Badge>
+                                    )}
+                                </div>
+                            ))}
+                            
+                            {players.length < 2 && (
+                                <div className="flex items-center justify-center p-4 rounded-lg border-2 border-dashed border-zinc-800 bg-zinc-950/50">
+                                    <span className="text-zinc-500 text-sm font-medium animate-pulse">
+                                        À espera do 2º jogador...
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </CardContent>
+
+                <CardFooter className="flex flex-col gap-3">
+                    {isHost ? (
+                        <Button 
+                            className="w-full h-12 text-lg font-bold bg-emerald-600 hover:bg-emerald-700 text-white" 
+                            disabled={!canStart} 
                             onClick={onStartGame}
-                            disabled={!canStart}
-                            className="group relative w-full py-5 px-6 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 hover:from-emerald-700 hover:via-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-black text-2xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(16,185,129,0.6)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_-10px_rgba(16,185,129,0.8)] disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                            <div className="relative flex items-center justify-center gap-4">
-                                {canStart ? (
-                                    <>
-                                        <Rocket className="w-8 h-8 group-hover:-rotate-45 transition-transform duration-300" />
-                                        <span className="tracking-wide">COMEÇAR JOGO</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Hourglass className="w-8 h-8 animate-spin-slow" />
-                                        <span className="tracking-wide">AGUARDANDO...</span>
-                                    </>
-                                )}
-                            </div>
-                        </button>
-                    )}
-                    {!isHost && (
-                        <div className="w-full py-5 px-6 bg-white/10 text-purple-200 font-bold text-center rounded-2xl border-2 border-purple-400/30 flex items-center justify-center gap-3 backdrop-blur-sm">
-                            <Hourglass className="w-6 h-6 animate-spin-slow" />
-                            <span>Aguardando o host iniciar...</span>
+                            {canStart ? (
+                                <><Rocket className="w-5 h-5 mr-2" /> Começar Jogo</>
+                            ) : (
+                                <><Hourglass className="w-5 h-5 mr-2 animate-spin-slow" /> Aguardando...</>
+                            )}
+                        </Button>
+                    ) : (
+                        <div className="w-full h-12 flex items-center justify-center rounded-md bg-zinc-800 text-zinc-400 font-medium">
+                            <Hourglass className="w-4 h-4 mr-2 animate-spin-slow" /> Host a iniciar...
                         </div>
                     )}
-                    <button
-                        onClick={onLeaveRoom}
-                        className="group w-full py-4 px-6 bg-white/5 hover:bg-red-500/20 text-white font-bold rounded-2xl border-2 border-white/10 hover:border-red-500/50 transition-all duration-200 flex items-center justify-center gap-2"
-                    >
-                        <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
-                        Sair da Sala
-                    </button>
-                </div>
-            </div>
+                    <Button variant="ghost" className="w-full text-zinc-400 hover:text-red-400 hover:bg-red-500/10" onClick={onLeaveRoom}>
+                        <LogOut className="w-4 h-4 mr-2" /> Sair da Sala
+                    </Button>
+                </CardFooter>
+            </Card>
         </div>
     );
 };

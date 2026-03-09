@@ -2,20 +2,17 @@ import { useEffect, useState, useCallback } from 'react';
 import { useGameStore, type GameEvent } from '../../store/gameStore';
 import { Coins, ShieldAlert, Coffee, Bot, Skull, Trophy, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
-// ============================================================
-// Mapeamento de ícones e cores por tipo de evento
-// ============================================================
-const EVENT_CONFIG: Record<string, { icon: typeof Coins; bgClass: string; borderClass: string }> = {
-    RENT_PAID: { icon: Coins, bgClass: 'from-yellow-600/90 to-amber-700/90', borderClass: 'border-yellow-500' },
-    PROPERTY_BOUGHT: { icon: TrendingUp, bgClass: 'from-emerald-600/90 to-green-700/90', borderClass: 'border-emerald-500' },
-    PASSED_START: { icon: Coins, bgClass: 'from-green-600/90 to-emerald-700/90', borderClass: 'border-green-500' },
-    AUDIT_TAX: { icon: ShieldAlert, bgClass: 'from-red-600/90 to-rose-700/90', borderClass: 'border-red-500' },
-    COFFEE_BREAK: { icon: Coffee, bgClass: 'from-amber-600/90 to-yellow-700/90', borderClass: 'border-amber-500' },
-    CHATGPT_MOVE: { icon: Bot, bgClass: 'from-blue-600/90 to-cyan-700/90', borderClass: 'border-blue-500' },
-    PLAYER_BANKRUPT: { icon: Skull, bgClass: 'from-gray-700/90 to-slate-800/90', borderClass: 'border-gray-500' },
-    GAME_OVER: { icon: Trophy, bgClass: 'from-yellow-500/90 to-amber-600/90', borderClass: 'border-yellow-400' },
-    ANSWER_CORRECT: { icon: CheckCircle, bgClass: 'from-emerald-600/90 to-green-700/90', borderClass: 'border-emerald-500' },
-    ANSWER_WRONG: { icon: XCircle, bgClass: 'from-red-600/90 to-rose-700/90', borderClass: 'border-red-500' },
+const EVENT_CONFIG: Record<string, { icon: typeof Coins; colorClass: string }> = {
+    RENT_PAID: { icon: Coins, colorClass: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+    PROPERTY_BOUGHT: { icon: TrendingUp, colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+    PASSED_START: { icon: Coins, colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+    AUDIT_TAX: { icon: ShieldAlert, colorClass: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+    COFFEE_BREAK: { icon: Coffee, colorClass: 'text-amber-600 bg-amber-600/10 border-amber-600/20' },
+    CHATGPT_MOVE: { icon: Bot, colorClass: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
+    PLAYER_BANKRUPT: { icon: Skull, colorClass: 'text-zinc-400 bg-zinc-800 border-zinc-700' },
+    GAME_OVER: { icon: Trophy, colorClass: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' },
+    ANSWER_CORRECT: { icon: CheckCircle, colorClass: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+    ANSWER_WRONG: { icon: XCircle, colorClass: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
 };
 
 export const EventToast = () => {
@@ -52,22 +49,22 @@ export const EventToast = () => {
     return (
         <div
             className={`fixed top-24 left-1/2 -translate-x-1/2 z-[60] pointer-events-auto transition-all duration-300 ${
-                visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+                visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95'
             }`}
         >
             <div
-                className={`bg-gradient-to-r ${config.bgClass} backdrop-blur-xl px-8 py-4 rounded-2xl border-2 ${config.borderClass} shadow-2xl flex items-center gap-4 max-w-lg cursor-pointer`}
+                className={`bg-zinc-950/95 backdrop-blur-md px-5 py-3 rounded-full border border-zinc-800 shadow-2xl flex items-center gap-3 max-w-lg cursor-pointer hover:bg-zinc-900 transition-colors`}
                 onClick={hideToast}
             >
-                <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-white" />
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center border ${config.colorClass}`}>
+                    <Icon className={`w-4 h-4 ${config.colorClass.split(' ')[0]}`} />
                 </div>
-                <p className="text-white font-bold text-base leading-snug">
+                <p className="text-zinc-100 font-medium text-sm leading-snug">
                     {currentEvent.message}
                 </p>
                 {currentEvent.amount !== undefined && (
-                    <div className="flex-shrink-0 bg-white/20 px-3 py-1 rounded-full">
-                        <span className="text-white font-black text-sm">{currentEvent.amount} DG</span>
+                    <div className="flex-shrink-0 bg-zinc-800 border border-zinc-700 px-2.5 py-0.5 rounded-full ml-2">
+                        <span className="text-zinc-300 font-bold text-xs">{currentEvent.amount} DG</span>
                     </div>
                 )}
             </div>

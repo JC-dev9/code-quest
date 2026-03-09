@@ -3,7 +3,7 @@ import {
     GamePhase, GameEvent, GameEventType
 } from '../models/types';
 import { BOARD_SIZE, INITIAL_MONEY } from '../config/constants';
-import { QUESTIONS } from '../data/questions';
+
 import { generateBoard } from '../utils/boardGenerator';
 import SupabaseService from './SupabaseService';
 
@@ -407,8 +407,22 @@ export class GameService {
         // Validação estrita: propriedade livre, dinheiro suficiente
         if (space.type === 'property' && space.ownerId === null && player.money >= (space.price ?? 0)) {
             // Filtrar perguntas pelo nível da casa
-            const available = QUESTIONS.filter(q => q.level === space.level);
-            this.currentQuestion = available[Math.floor(Math.random() * available.length)] || QUESTIONS[0];
+            const dbQuestions = this.supabase.getQuestions();
+            const available = dbQuestions.filter(q => q.level === space.level);
+            
+            if (available.length > 0) {
+                this.currentQuestion = available[Math.floor(Math.random() * available.length)];
+            } else {
+                // Instância de Fallback se não houver perguntas do nível na DB
+                console.warn(`Aviso: Nenhuma pergunta encontrada para o nível ${space.level}. Usar fallback.`);
+                this.currentQuestion = {
+                    text: "Pergunta de Emergência (Base de dados sem perguntas para este nível). O que é HTML?",
+                    options: ["HyperText Markup Language", "Hi Text", "None"],
+                    correctIndex: 0,
+                    level: space.level as import('../models/types').SpaceLevel
+                };
+            }
+            
             this.pendingPurchaseId = space.id;
             player.purchaseAttemptUsed = true;
             this.notifyStateChange();

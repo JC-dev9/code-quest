@@ -1,6 +1,8 @@
 import React from 'react';
 import { Dices, Trophy, Timer, Sparkles } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export const InitialRollOverlay: React.FC = () => {
     const {
@@ -9,7 +11,6 @@ export const InitialRollOverlay: React.FC = () => {
         localPlayerId,
         rollDice,
         isRolling,
-        diceValue: _diceValue,
         gamePhase
     } = useGameStore();
 
@@ -19,120 +20,113 @@ export const InitialRollOverlay: React.FC = () => {
     const isLocalTurn = currentPlayer.id === localPlayerId;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md animate-slide-in">
-            <div className="bg-gradient-to-br from-slate-900/95 to-purple-900/95 border-2 border-purple-500/30 rounded-3xl p-10 max-w-2xl w-full shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-3">
-                        <Trophy className="w-10 h-10 text-yellow-400 animate-pulse" />
-                        <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 animate-gradient">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4">
+            <Card className="w-full max-w-2xl bg-zinc-900 border-indigo-500/30 shadow-[0_0_50px_rgba(99,102,241,0.15)]">
+                <CardHeader className="text-center pb-6">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                        <Trophy className="w-8 h-8 text-amber-400" />
+                        <CardTitle className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">
                             ORDEM DE JOGADA
-                        </h2>
-                        <Trophy className="w-10 h-10 text-yellow-400 animate-pulse" />
+                        </CardTitle>
+                        <Trophy className="w-8 h-8 text-amber-400" />
                     </div>
-                    <p className="text-purple-200 text-lg font-medium">
+                    <CardDescription className="text-zinc-400 text-lg">
                         Lance os dados para determinar quem joga primeiro
-                    </p>
-                </div>
+                    </CardDescription>
+                </CardHeader>
 
-                {/* Players List */}
-                <div className="space-y-4 mb-8">
-                    {players.map((player, index) => {
-                        const isCurrentTurn = index === currentPlayerIndex;
-                        const hasRolled = player.initialRoll !== undefined;
+                <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                        {players.map((player, index) => {
+                            const isCurrentTurn = index === currentPlayerIndex;
+                            const hasRolled = player.initialRoll !== undefined;
 
-                        return (
-                            <div
-                                key={player.id}
-                                className={`relative bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-5 border-2 transition-all duration-500 ${isCurrentTurn
-                                        ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.4)] scale-105'
-                                        : hasRolled
-                                            ? 'border-purple-500/30'
-                                            : 'border-white/10 opacity-60'
-                                    } animate-slide-in`}
-                                style={{ animationDelay: `${index * 0.1}s` }}
-                            >
-                                {/* Active Turn Indicator */}
-                                {isCurrentTurn && (
-                                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.8)]">
-                                        <Timer className="w-3 h-3 text-white" />
-                                    </div>
-                                )}
-
-                                <div className="flex items-center justify-between">
-                                    {/* Player Info */}
-                                    <div className="flex items-center gap-4">
-                                        <div
-                                            className="w-14 h-14 rounded-xl shadow-lg flex items-center justify-center font-black text-2xl text-white border-2 border-white/20"
-                                            style={{ backgroundColor: player.color }}
-                                        >
-                                            {player.id}
+                            return (
+                                <div
+                                    key={player.id}
+                                    className={`relative bg-zinc-950/50 rounded-xl p-4 border transition-all duration-300 ${
+                                        isCurrentTurn
+                                            ? 'border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)] bg-emerald-500/5'
+                                            : hasRolled
+                                                ? 'border-indigo-500/20'
+                                                : 'border-zinc-800 opacity-60'
+                                    }`}
+                                >
+                                    {isCurrentTurn && (
+                                        <div className="absolute -top-3 -right-3 w-8 h-8 bg-emerald-500/20 rounded-full border border-emerald-500/50 flex items-center justify-center animate-pulse">
+                                            <Timer className="w-4 h-4 text-emerald-400" />
                                         </div>
-                                        <div>
-                                            <p className="text-white font-black text-xl">
-                                                Jogador {player.id}
-                                            </p>
-                                            <p className="text-purple-300 text-sm font-medium">
-                                                {player.id === localPlayerId ? 'Você' : 'Adversário'}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
 
-                                    {/* Roll Result or Status */}
-                                    <div className="text-right">
-                                        {hasRolled ? (
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-gradient-to-br from-white to-gray-100 w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center border-2 border-white/50">
-                                                    <span className="text-4xl font-black text-slate-900">{player.initialRoll}</span>
-                                                </div>
-                                                <Sparkles className="w-6 h-6 text-yellow-400 animate-pulse" />
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div
+                                                className="w-12 h-12 rounded-lg flex items-center justify-center font-black text-xl text-zinc-950 shadow-sm"
+                                                style={{ backgroundColor: player.color }}
+                                            >
+                                                {player.id}
                                             </div>
-                                        ) : (
-                                            <div className="bg-white/5 px-6 py-3 rounded-xl border border-white/10">
-                                                <p className="text-purple-300 text-sm font-bold uppercase tracking-wider">
-                                                    {isCurrentTurn ? 'Sua vez!' : 'Aguardando...'}
+                                            <div>
+                                                <p className="text-zinc-100 font-bold text-lg">
+                                                    Jogador {player.id}
+                                                </p>
+                                                <p className="text-zinc-500 text-sm font-medium">
+                                                    {player.id === localPlayerId ? 'Você' : 'Adversário'}
                                                 </p>
                                             </div>
-                                        )}
+                                        </div>
+
+                                        <div className="text-right">
+                                            {hasRolled ? (
+                                                <div className="flex items-center gap-3">
+                                                    <div className="bg-zinc-800 w-14 h-14 rounded-xl flex items-center justify-center border border-zinc-700">
+                                                        <span className="text-3xl font-black text-indigo-400">{player.initialRoll}</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800">
+                                                    <p className={`text-xs font-bold uppercase tracking-wider ${isCurrentTurn ? 'text-emerald-400' : 'text-zinc-600'}`}>
+                                                        {isCurrentTurn ? 'Sua vez!' : 'Aguardando...'}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Roll Button */}
-                {isLocalTurn && (
-                    <button
-                        onClick={rollDice}
-                        disabled={isRolling}
-                        className="group relative w-full py-6 px-8 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 hover:from-emerald-700 hover:via-green-600 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-black text-2xl rounded-2xl shadow-[0_10px_40px_-10px_rgba(16,185,129,0.6)] transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_60px_-10px_rgba(16,185,129,0.8)] disabled:scale-100 disabled:cursor-not-allowed overflow-hidden"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                        <div className="relative flex items-center justify-center gap-4">
-                            {isRolling ? (
-                                <>
-                                    <Dices className="w-8 h-8 animate-spin" />
-                                    <span className="tracking-wide">A PROCESSAR...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="w-8 h-8 group-hover:rotate-180 transition-transform duration-700" />
-                                    <span className="tracking-wide">LANÇAR DADOS</span>
-                                    <Dices className="w-8 h-8 group-hover:rotate-[360deg] transition-transform duration-700" />
-                                </>
-                            )}
-                        </div>
-                    </button>
-                )}
-
-                {!isLocalTurn && (
-                    <div className="w-full py-6 px-8 bg-white/10 text-purple-200 font-bold text-center rounded-2xl border-2 border-purple-400/30 flex items-center justify-center gap-3 backdrop-blur-sm">
-                        <Timer className="w-6 h-6 animate-spin-slow" />
-                        <span>Aguardando Jogador {currentPlayer.id}...</span>
+                            );
+                        })}
                     </div>
-                )}
-            </div>
+
+                    <div className="pt-2">
+                        {isLocalTurn ? (
+                            <Button
+                                size="lg"
+                                onClick={rollDice}
+                                disabled={isRolling}
+                                className="w-full h-16 text-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-900/20 transition-all border border-emerald-500/50"
+                            >
+                                {isRolling ? (
+                                    <span className="flex items-center gap-3">
+                                        <Dices className="w-6 h-6 animate-spin" />
+                                        A PROCESSAR...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-3">
+                                        <Sparkles className="w-5 h-5" />
+                                        LANÇAR DADOS
+                                        <Dices className="w-6 h-6" />
+                                    </span>
+                                )}
+                            </Button>
+                        ) : (
+                            <div className="w-full h-16 bg-zinc-900/50 text-indigo-400 font-medium flex items-center justify-center gap-3 rounded-xl border border-indigo-500/20">
+                                <Timer className="w-5 h-5 animate-spin-slow" />
+                                <span>Aguarde o lançamento do Jogador {currentPlayer.id}...</span>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

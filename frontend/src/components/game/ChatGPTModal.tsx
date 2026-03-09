@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { Bot, MapPin, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 export const ChatGPTModal = () => {
     const {
@@ -11,7 +12,6 @@ export const ChatGPTModal = () => {
     const currentPlayer = players[currentPlayerIndex];
     const isMyTurn = localPlayerId === currentPlayer?.id;
 
-    // Filtrar casas válidas para o Chat GPT (apenas propriedades, não cantos)
     const validSpaces = useMemo(() => {
         return boardConfig.filter(space =>
             space.type === 'property'
@@ -27,26 +27,25 @@ export const ChatGPTModal = () => {
     if (!awaitingChatGPTChoice) return null;
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-md pointer-events-auto z-50 animate-slide-in">
-            <div className="bg-gradient-to-br from-slate-900/95 to-blue-900/95 border-2 border-blue-500/50 p-8 rounded-3xl max-w-3xl w-full shadow-[0_0_60px_rgba(59,130,246,0.3)] backdrop-blur-xl max-h-[80vh] flex flex-col">
-                {/* Cabeçalho */}
-                <div className="flex items-center justify-center gap-4 mb-6">
-                    <Bot className="w-10 h-10 text-blue-400 animate-pulse" />
-                    <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500">
-                        CHAT GPT
-                    </h2>
-                    <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
-                </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm pointer-events-auto z-50 p-4">
+            <Card className="w-full max-w-3xl bg-zinc-900 border-indigo-500/50 shadow-[0_0_40px_rgba(99,102,241,0.2)] max-h-[85vh] flex flex-col">
+                <CardHeader className="text-center pb-4 shrink-0">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                        <Bot className="w-8 h-8 text-indigo-400" />
+                        <CardTitle className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">
+                            CHAT GPT
+                        </CardTitle>
+                        <Sparkles className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <CardDescription className="text-zinc-400 text-base font-medium">
+                        {isMyTurn
+                            ? 'Escolhe uma casa para o Chat GPT te avançar!'
+                            : `Aguardando ${currentPlayer?.displayName ?? 'jogador'} escolher...`
+                        }
+                    </CardDescription>
+                </CardHeader>
 
-                <p className="text-blue-200 text-center text-lg mb-6 font-medium">
-                    {isMyTurn
-                        ? 'Escolhe uma casa para avançar!'
-                        : `Aguardando ${currentPlayer?.displayName ?? 'jogador'} escolher...`
-                    }
-                </p>
-
-                {/* Grid de casas disponíveis */}
-                <div className="overflow-y-auto grid grid-cols-4 gap-2 pr-2">
+                <CardContent className="overflow-y-auto pr-2 grid grid-cols-2 md:grid-cols-4 gap-3 pb-6">
                     {validSpaces.map(space => {
                         const isOwned = space.ownerId !== null;
                         const owner = isOwned ? players.find(p => p.id === space.ownerId) : null;
@@ -56,44 +55,43 @@ export const ChatGPTModal = () => {
                                 key={space.id}
                                 onClick={() => handleChoose(space.id)}
                                 disabled={!isMyTurn}
-                                className={`group relative p-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                                className={`group relative p-3 rounded-xl border transition-all duration-200 text-left ${
                                     isMyTurn
-                                        ? 'border-white/20 hover:border-blue-500 hover:scale-105 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] cursor-pointer bg-white/5'
-                                        : 'border-white/10 opacity-50 cursor-not-allowed bg-white/5'
+                                        ? 'border-zinc-800 bg-zinc-950 hover:border-indigo-500 hover:bg-zinc-900 cursor-pointer'
+                                        : 'border-zinc-800 bg-zinc-950/50 opacity-60 cursor-not-allowed'
                                 }`}
                             >
-                                {/* Indicador de cor */}
                                 <div
-                                    className="w-full h-1.5 rounded-full mb-2"
+                                    className="w-full h-1.5 rounded-full mb-3"
                                     style={{ backgroundColor: space.color }}
                                 />
 
-                                <p className="text-white text-xs font-bold truncate">{space.name}</p>
+                                <p className="text-zinc-100 text-sm font-bold truncate">{space.name}</p>
 
-                                <div className="flex items-center justify-between mt-1">
-                                    <span className="text-[10px] text-gray-400 font-medium">
+                                <div className="flex items-center justify-between mt-2">
+                                    <span className="text-xs text-zinc-500 font-medium">
                                         {space.price} DG
                                     </span>
                                     {isOwned && owner && (
                                         <div
-                                            className="w-3 h-3 rounded-full border border-white/30"
+                                            className="w-3 h-3 rounded-full border border-zinc-800"
                                             style={{ backgroundColor: owner.color }}
                                         />
                                     )}
                                     {space.isImportant && (
-                                        <Sparkles className="w-3 h-3 text-yellow-400" />
+                                        <Sparkles className="w-3 h-3 text-indigo-400" />
                                     )}
                                 </div>
 
-                                <div className="flex items-center gap-1 mt-1">
-                                    <MapPin className="w-2.5 h-2.5 text-gray-500" />
-                                    <span className="text-[9px] text-gray-500">#{space.id}</span>
+                                <div className="flex items-center gap-1 mt-2 pt-2 border-t border-zinc-800/50">
+                                    <MapPin className="w-3 h-3 text-zinc-600" />
+                                    <span className="text-[10px] text-zinc-500">#{space.id}</span>
                                 </div>
                             </button>
                         );
                     })}
-                </div>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

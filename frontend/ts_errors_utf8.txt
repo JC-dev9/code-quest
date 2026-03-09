@@ -1,0 +1,3 @@
+﻿src/components/game/QuestionModal.tsx(4,52): error TS6133: 'CardDescription' is declared but its value is never read.
+src/components/game/RoomLobby.tsx(88,112): error TS2353: Object literal may only specify known properties, and 'ringColor' does not exist in type 'CSSProperties | (CSSProperties & ((state: AvatarRootState) => CSSProperties | undefined))'.
+src/components/ui/scroll-area.tsx(3,1): error TS6133: 'React' is declared but its value is never read.

@@ -6,10 +6,9 @@ import { EventToast } from './EventToast';
 import { ChatGPTModal } from './ChatGPTModal';
 import { useGameStore } from '../../store/gameStore';
 import { Trophy, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
-// ============================================================
-// Overlay de Vitória (fim de jogo)
-// ============================================================
 const VictoryOverlay = () => {
     const { winnerId, players, leaveRoom } = useGameStore();
     if (winnerId === null) return null;
@@ -18,48 +17,52 @@ const VictoryOverlay = () => {
     if (!winner) return null;
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-md pointer-events-auto z-[70] animate-slide-in">
-            <div className="bg-gradient-to-br from-yellow-900/95 to-amber-900/95 border-2 border-yellow-500/50 p-12 rounded-3xl max-w-lg w-full shadow-[0_0_80px_rgba(234,179,8,0.4)] text-center">
-                <div className="flex justify-center mb-6">
-                    <div className="relative">
-                        <Trophy className="w-24 h-24 text-yellow-400" />
-                        <Sparkles className="w-8 h-8 text-yellow-300 absolute -top-2 -right-2 animate-pulse" />
+        <div className="fixed inset-0 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md pointer-events-auto z-[70] p-4">
+            <Card className="w-full max-w-md bg-zinc-900 border-amber-500/50 shadow-[0_0_80px_rgba(245,158,11,0.2)] text-center">
+                <CardHeader className="pt-8 pb-4 relative">
+                    <div className="flex justify-center mb-4">
+                        <div className="relative">
+                            <Trophy className="w-20 h-20 text-amber-500" />
+                            <Sparkles className="w-8 h-8 text-yellow-400 absolute -top-2 -right-2 animate-pulse" />
+                        </div>
                     </div>
-                </div>
+                    <CardTitle className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">
+                        VITÓRIA!
+                    </CardTitle>
+                    <CardDescription className="text-zinc-400 text-base font-medium">
+                        Temos um grande vencedor!
+                    </CardDescription>
+                </CardHeader>
 
-                <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 mb-4 animate-gradient">
-                    VITÓRIA!
-                </h2>
+                <CardContent className="space-y-6 pb-8">
+                    <div className="flex items-center justify-center gap-4 bg-zinc-950/50 p-4 rounded-xl border border-zinc-800">
+                        <div
+                            className="w-14 h-14 rounded-xl shadow-lg flex items-center justify-center font-black text-2xl text-zinc-950"
+                            style={{ backgroundColor: winner.color }}
+                        >
+                            {winner.id}
+                        </div>
+                        <div className="text-left">
+                            <p className="text-xl font-black text-zinc-100">{winner.displayName || `Jogador ${winner.id}`}</p>
+                            <p className="text-amber-500 font-bold text-sm">
+                                {winner.money} DG • {winner.properties.length} empresas
+                            </p>
+                        </div>
+                    </div>
 
-                <div className="flex items-center justify-center gap-4 mb-6">
-                    <div
-                        className="w-16 h-16 rounded-xl shadow-lg flex items-center justify-center font-black text-3xl text-white border-2 border-white/30"
-                        style={{ backgroundColor: winner.color }}
+                    <Button
+                        size="lg"
+                        onClick={leaveRoom}
+                        className="w-full font-bold h-14 text-lg bg-amber-600 hover:bg-amber-700 text-white"
                     >
-                        {winner.id}
-                    </div>
-                    <div className="text-left">
-                        <p className="text-2xl font-black text-white">{winner.displayName}</p>
-                        <p className="text-yellow-300 font-medium">
-                            {winner.money} DG • {winner.properties.length} empresas
-                        </p>
-                    </div>
-                </div>
-
-                <button
-                    onClick={leaveRoom}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white font-black text-xl rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer"
-                >
-                    VOLTAR AO MENU
-                </button>
-            </div>
+                        VOLTAR AO LOBBY
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
     );
 };
 
-// ============================================================
-// GameHUD — Overlay principal do jogo
-// ============================================================
 export const GameHUD = () => {
     const { currentPlayerIndex, players, gamePhase } = useGameStore();
     const currentPlayer = players[currentPlayerIndex];

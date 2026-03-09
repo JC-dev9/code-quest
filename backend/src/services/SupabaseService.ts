@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { GameStateData } from '../models/types';
+import { GameStateData, Question, SpaceLevel } from '../models/types';
 
 // ============================================================
 // Tipos de dados das tabelas do Supabase
@@ -54,10 +54,11 @@ export interface MatchResult {
 class SupabaseService {
     private client: SupabaseClient;
     private static instance: SupabaseService | null = null;
+    private questionsCache: Question[] = [];
 
     private constructor() {
         const url = process.env.SUPABASE_URL;
-        const key = process.env.SUPABASE_ANON_KEY;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
         if (!url || !key) {
             console.warn('⚠️  Variáveis SUPABASE_URL ou SUPABASE_ANON_KEY não definidas. Persistência desativada.');
@@ -292,6 +293,58 @@ class SupabaseService {
             return [];
         }
     }
+    // ============================================================
+    // Perguntas (Questions)
+    // ============================================================
+
+    /** Carregar e mapear todas as perguntas aprovadas e as suas opções */
+    public async loadAllQuestions(): Promise<void> {
+        try {
+            console.log('⏳ A carregar perguntas do Supabase...');
+            const { data, error } = await this.client
+                .from('pergunta')
+                .select(`
+                    id,
+                    enunciado,
+                    dificuldade:dificuldade_id (id, nome),
+                    opcoes:opcao (id, texto, correta)
+                `)
+                .eq('aprovada', true);
+
+            if (error || !data) {
+                console.error('❌ Erro ao carregar perguntas:', error?.message);
+                return;
+            }
+
+            this.questionsCache = data.map((q: any) => {
+                const options = q.opcoes || [];
+                const correctIndex = options.findIndex((o: any) => o.correta);
+                
+                const safeCorrectIndex = correctIndex >= 0 ? correctIndex : 0;
+                
+                // Mapear "Intermediário" -> "Intermédio" caso haja divergências na DB, etc.
+                let levelName = q.dificuldade?.nome || 'Fácil';
+                if (levelName === 'Intermediário') levelName = 'Intermédio';
+
+                return {
+                    text: q.enunciado,
+                    options: options.map((o: any) => o.texto),
+                    correctIndex: safeCorrectIndex,
+                    level: levelName as SpaceLevel
+                };
+            });
+
+            console.log(`✅ ${this.questionsCache.length} perguntas carregadas e prontas no cache.`);
+        } catch (err) {
+            console.error('❌ Exceção ao carregar perguntas:', err);
+        }
+    }
+
+    /** Obter lista de perguntas mapeadas do cache local (rápido) */
+    public getQuestions(): Question[] {
+        return this.questionsCache;
+    }
 }
 
 export default SupabaseService;
+
