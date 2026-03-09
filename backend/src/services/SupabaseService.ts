@@ -331,9 +331,9 @@ class SupabaseService {
                 
                 const safeCorrectIndex = correctIndex >= 0 ? correctIndex : 0;
                 
-                // Mapear "Intermediário" -> "Intermédio" caso haja divergências na DB, etc.
+                // Mapear "Médio" / "Intermediário" -> "Intermédio"
                 let levelName = q.dificuldade?.nome || 'Fácil';
-                if (levelName === 'Intermediário') levelName = 'Intermédio';
+                if (levelName === 'Médio' || levelName === 'Intermediário') levelName = 'Intermédio';
 
                 return {
                     text: q.enunciado,

@@ -55,39 +55,41 @@ export const DiceDisplay = () => {
             </div>
 
             {/* Total Display */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-full font-black text-lg shadow-lg border-2 border-white/30">
-                Total: {diceValue.reduce((a, b) => a + b, 0)}
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-5 py-2.5 rounded-full">
+                <span className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Total</span>
+                <span className="text-white font-bold text-lg">{diceValue.reduce((a, b) => a + b, 0)}</span>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 w-80">
+            <div className="flex flex-col gap-2 w-72">
                 {currentSpace?.type === 'property' && currentSpace.ownerId === null && (
                     <>
                         {currentPlayer.purchaseAttemptUsed ? (
-                            <div className="px-6 py-4 bg-gradient-to-r from-red-900/40 to-red-800/40 border-2 border-red-500/50 text-red-200 rounded-2xl font-bold text-center flex items-center justify-center gap-3 backdrop-blur-sm animate-shake">
-                                <AlertCircle className="w-6 h-6" />
+                            <div className="px-5 py-3 bg-red-950 border border-red-500/40 text-red-300 rounded-xl text-sm font-medium text-center flex items-center justify-center gap-2 animate-shake">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
                                 <span>Tentativa de compra já utilizada</span>
                             </div>
                         ) : (
                             <button
                                 onClick={requestPurchase}
                                 disabled={!isMyTurn || !canPurchase}
-                                className={`group relative px-6 py-5 bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 text-white rounded-2xl font-black text-lg transition-all overflow-hidden ${
+                                className={`px-5 py-4 bg-emerald-900 border border-emerald-700 text-emerald-100 rounded-xl font-semibold text-sm transition-all duration-200 ${
                                     isMyTurn && canPurchase 
-                                        ? 'hover:scale-105 hover:shadow-[0_0_40px_rgba(16,185,129,0.6)] cursor-pointer' 
-                                        : 'opacity-50 cursor-not-allowed'
+                                        ? 'hover:bg-emerald-800 hover:border-emerald-600 hover:scale-[1.02] cursor-pointer' 
+                                        : 'opacity-40 cursor-not-allowed'
                                 }`}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                                <div className="relative flex items-center justify-center gap-3">
-                                    <ShoppingCart className="w-6 h-6 group-hover:rotate-12 transition-transform duration-300" />
-                                    <div className="flex flex-col items-start">
-                                        <span className="text-sm opacity-80">COMPRAR</span>
-                                        <span className="text-xl leading-none">{currentSpace.name}</span>
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-2.5">
+                                        <ShoppingCart className="w-4 h-4 text-emerald-400" />
+                                        <div className="flex flex-col items-start">
+                                            <span className="text-xs text-emerald-400/80 uppercase tracking-wider leading-none mb-0.5">Comprar</span>
+                                            <span className="text-white font-medium leading-none">{currentSpace.name}</span>
+                                        </div>
                                     </div>
-                                    <div className="ml-auto flex items-center gap-1">
-                                        <span className="text-2xl font-black">{currentSpace.price}</span>
-                                        <span className="text-sm">DG</span>
+                                    <div className="flex items-baseline gap-1 text-emerald-300">
+                                        <span className="text-lg font-bold">{currentSpace.price}</span>
+                                        <span className="text-xs opacity-70">DG</span>
                                     </div>
                                 </div>
                             </button>
@@ -98,16 +100,15 @@ export const DiceDisplay = () => {
                 <button
                     onClick={nextTurn}
                     disabled={!isMyTurn}
-                    className={`group relative px-6 py-5 bg-gradient-to-r from-slate-700 to-slate-600 backdrop-blur-md border-2 border-white/20 text-white rounded-2xl font-black text-xl transition-all overflow-hidden ${
+                    className={`px-5 py-4 bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-xl font-semibold text-sm transition-all duration-200 ${
                         isMyTurn 
-                            ? 'hover:bg-gradient-to-r hover:from-slate-600 hover:to-slate-500 hover:scale-105 cursor-pointer' 
-                            : 'opacity-50 cursor-not-allowed'
+                            ? 'hover:bg-zinc-700 hover:border-zinc-600 hover:scale-[1.02] cursor-pointer' 
+                            : 'opacity-40 cursor-not-allowed'
                     }`}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                    <div className="relative flex items-center justify-center gap-3">
-                        <span>TERMINAR TURNO</span>
-                        <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+                    <div className="flex items-center justify-center gap-2.5">
+                        <span className="tracking-wide">Terminar Turno</span>
+                        <ArrowRight className="w-4 h-4 text-zinc-400" />
                     </div>
                 </button>
             </div>
