@@ -84,6 +84,7 @@ interface GameState {
     lastEvent: GameEvent | null;
     awaitingChatGPTChoice: boolean;
     isTokenMoving: boolean;
+    gameMode: 'online' | 'split-screen';
 
     // Estado da Conexão
     socket: Socket | null;
@@ -93,7 +94,7 @@ interface GameState {
     // Ações
     connectSocket: () => void;
     disconnectSocket: () => void;
-    createRoom: () => void;
+    createRoom: (mode?: 'online' | 'split-screen') => void;
     joinRoom: (code: string) => void;
     leaveRoom: () => void;
     startGame: () => void;
@@ -105,6 +106,7 @@ interface GameState {
     chatGPTChooseSpace: (spaceId: number) => void;
     clearEvent: () => void;
     setTokenMoving: (moving: boolean) => void;
+    addLocalPlayer: () => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -127,6 +129,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     lastEvent: null,
     awaitingChatGPTChoice: false,
     isTokenMoving: false,
+    gameMode: 'online',
     socket: null,
     isLoading: false,
     error: null,
@@ -171,7 +174,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 gamePhase: gameState.gamePhase,
                 winnerId: gameState.winnerId ?? null,
                 lastEvent: gameState.lastEvent ?? null,
-                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false,
+                gameMode: gameState.mode || 'online'
             });
         });
 
@@ -201,7 +205,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 gamePhase: gameState.gamePhase,
                 winnerId: gameState.winnerId ?? null,
                 lastEvent: gameState.lastEvent ?? null,
-                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false,
+                gameMode: gameState.mode || 'online'
             });
         });
 
@@ -217,7 +222,8 @@ export const useGameStore = create<GameState>((set, get) => ({
                 gamePhase: gameState.gamePhase,
                 winnerId: gameState.winnerId ?? null,
                 lastEvent: gameState.lastEvent ?? null,
-                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false
+                awaitingChatGPTChoice: gameState.awaitingChatGPTChoice ?? false,
+                gameMode: gameState.mode || 'online'
             });
         });
 
@@ -253,12 +259,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
     },
 
-    createRoom: () => {
+    createRoom: (mode: 'online' | 'split-screen' = 'online') => {
         const { socket } = get();
         if (!socket) return;
 
         set({ isLoading: true, error: null });
-        socket.emit('create-room');
+        socket.emit('create-room', mode);
     },
 
     joinRoom: (code: string) => {
@@ -349,5 +355,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     setTokenMoving: (moving: boolean) => {
         set({ isTokenMoving: moving });
+    },
+    addLocalPlayer: () => {
+        const { socket, gameMode } = get();
+        if (!socket || gameMode !== 'split-screen') return;
+        socket.emit('add-local-player');
     },
 }));

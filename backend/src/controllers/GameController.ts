@@ -24,9 +24,11 @@ export class GameController {
     // ============================================================
 
     private setupRoomHandlers(socket: Socket): void {
-        socket.on('create-room', () => {
-            const room = this.roomService.createRoom(socket.id);
+        socket.on('create-room', (mode: 'online' | 'split-screen' = 'online') => {
+            const room = this.roomService.createRoom(socket.id, mode);
             const { gameService } = room;
+
+            gameService.setMode(mode);
 
             // Registar callback para atualizações de estado assíncronas
             gameService.setOnStateChange((state) => {
@@ -123,6 +125,21 @@ export class GameController {
                 socket.emit('error', { message: "Jogador não encontrado nesta sala" });
             }
         });
+
+        socket.on('add-local-player', () => {
+            const room = this.roomService.getRoomBySocket(socket.id);
+            if (!room || room.mode !== 'split-screen') {
+                socket.emit('error', { message: "Apenas salas em modo local permitem adicionar jogadores locais" });
+                return;
+            }
+
+            const playerId = room.gameService.joinGame(socket.id, true);
+            if (playerId) {
+                this.io.to(room.code).emit('game-state-updated', room.gameService.getState());
+            } else {
+                socket.emit('error', { message: "Não é possível adicionar mais jogadores" });
+            }
+        });
     }
 
     // ============================================================
@@ -140,11 +157,15 @@ export class GameController {
         };
 
         socket.on('start-game', () => {
+            console.log(`📩 Recebido 'start-game' de ${socket.id}`);
             withGame((room, gameService) => {
+                console.log(`🔍 Validando host: room.hostSocketId=${room.hostSocketId}, currentSocketId=${socket.id}`);
                 if (room.hostSocketId === socket.id) {
                     gameService.startGame();
                     console.log(`🚀 Jogo iniciado na sala ${room.code}`);
                     this.io.to(room.code).emit('game-started');
+                } else {
+                    console.warn(`⚠️ Tentativa de iniciar jogo por não-host: ${socket.id}`);
                 }
             });
         });

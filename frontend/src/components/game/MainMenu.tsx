@@ -23,7 +23,7 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-zinc-950 p-4 overflow-hidden z-50">
-            <Card className="w-full max-w-md border-zinc-800 bg-zinc-900 shadow-2xl">
+            <Card className="w-full max-w-md border-zinc-800 bg-zinc-900 shadow-2xl overflow-y-auto max-h-[95vh]">
                 <CardHeader className="text-center space-y-4 pb-8">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500/10 mb-2">
                         <Sparkles className="h-8 w-8 text-indigo-400" />
@@ -43,19 +43,36 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
                         </div>
                     )}
 
-                    <Button 
-                        size="lg" 
-                        onClick={onCreateRoom}
-                        disabled={isLoading}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-14 text-lg"
-                    >
-                        {isLoading ? (
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        ) : (
-                            <Gamepad2 className="mr-2 h-5 w-5" />
-                        )}
-                        {isLoading ? 'Criando...' : 'Criar Nova Sala'}
-                    </Button>
+                    <div className="grid grid-cols-1 gap-3">
+                        <Button 
+                            size="lg" 
+                            onClick={() => onCreateRoom()} // Default Online
+                            disabled={isLoading}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-14 text-lg"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-5 w-5" />
+                            )}
+                            {isLoading ? 'Criando...' : 'Jogar Online'}
+                        </Button>
+
+                        <Button 
+                            size="lg" 
+                            variant="outline"
+                            onClick={() => (onCreateRoom as any)('split-screen')}
+                            disabled={isLoading}
+                            className="w-full border-indigo-500/30 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-100 font-bold h-14 text-lg"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            ) : (
+                                <Gamepad2 className="mr-2 h-5 w-5" />
+                            )}
+                            {isLoading ? 'Criando...' : 'Local (Split Screen)'}
+                        </Button>
+                    </div>
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
@@ -97,9 +114,9 @@ export const MainMenu = ({ onCreateRoom, onJoinRoom, isLoading, error }: MainMen
                 </CardContent>
 
                 <CardFooter className="pt-2 pb-6 flex justify-center">
-                    <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
-                        <Lightbulb className="h-4 w-4" />
-                        <span>Requer ligação estável ao servidor</span>
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium text-center">
+                        <Lightbulb className="h-4 w-4 shrink-0" />
+                        <span>{isLoading ? 'Aguarde um momento...' : 'No modo local não é necessário convidar amigos online'}</span>
                     </div>
                 </CardFooter>
             </Card>

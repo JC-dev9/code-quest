@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export const ActionControls = () => {
-    const { diceValue, isRolling, rollDice, currentPlayerIndex, players, localPlayerId } = useGameStore();
+    const { diceValue, isRolling, rollDice, currentPlayerIndex, players, localPlayerId, gameMode } = useGameStore();
 
     if (diceValue && !isRolling) return null;
 
     const currentPlayer = players[currentPlayerIndex];
-    const isMyTurn = localPlayerId === (currentPlayer?.id);
+    const isMyTurn = gameMode === 'split-screen' || localPlayerId === (currentPlayer?.id);
 
     return (
         <div className="flex justify-center pointer-events-auto pb-8 z-50">

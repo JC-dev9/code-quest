@@ -31,6 +31,7 @@ export class GameService {
     private lastEvent: GameEvent | null = null;
     private awaitingChatGPTChoice: boolean = false;
     private roomCode: string | null = null;
+    private mode: 'online' | 'split-screen' = 'online';
 
     // Mutex para bloquear race conditions
     private isProcessingAction: boolean = false;
@@ -71,8 +72,13 @@ export class GameService {
             gamePhase: this.gamePhase,
             winnerId: this.winnerId,
             lastEvent: this.lastEvent,
-            awaitingChatGPTChoice: this.awaitingChatGPTChoice
+            awaitingChatGPTChoice: this.awaitingChatGPTChoice,
+            mode: this.mode
         };
+    }
+
+    public setMode(mode: 'online' | 'split-screen'): void {
+        this.mode = mode;
     }
 
     public setOnStateChange(cb: (state: GameStateData) => void): void {
@@ -134,20 +140,22 @@ export class GameService {
     // Entrar / Reconectar
     // ============================================================
 
-    public joinGame(clientId: string): number | null {
-        // Verificar se o jogador já existe na sala
-        const existingPlayer = this.players.find(p => p.clientId === clientId);
-        if (existingPlayer) return existingPlayer.id;
+    public joinGame(clientId: string, forceNew: boolean = false): number | null {
+        // Verificar se o jogador já existe na sala (apenas se não for forçado - ex: multijogador local)
+        if (!forceNew) {
+            const existingPlayer = this.players.find(p => p.clientId === clientId);
+            if (existingPlayer) return existingPlayer.id;
+        }
 
-        // Verificar slots disponíveis (máximo 2 jogadores)
-        if (this.players.length >= 2) {
+        // Verificar slots disponíveis (máximo 4 jogadores)
+        if (this.players.length >= 4) {
             return null;
         }
 
         // Criar novo jogador dinamicamente
         const playerId = this.players.length + 1;
-        const playerColors = ['#ff0000', '#0000ff'];
-        const playerNames = ['Jogador 1', 'Jogador 2'];
+        const playerColors = ['#ff0000', '#0000ff', '#00ff00', '#ffff00'];
+        const playerNames = ['Jogador 1', 'Jogador 2', 'Jogador 3', 'Jogador 4'];
         const newPlayer: Player = {
             id: playerId,
             color: playerColors[playerId - 1],

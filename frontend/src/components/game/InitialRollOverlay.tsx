@@ -11,13 +11,14 @@ export const InitialRollOverlay: React.FC = () => {
         localPlayerId,
         rollDice,
         isRolling,
-        gamePhase
+        gamePhase,
+        gameMode
     } = useGameStore();
 
     if (gamePhase !== 'INITIAL_ROLL') return null;
 
     const currentPlayer = players[currentPlayerIndex];
-    const isLocalTurn = currentPlayer.id === localPlayerId;
+    const isLocalTurn = gameMode === 'split-screen' || currentPlayer.id === localPlayerId;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4">

@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const DiceDisplay = () => {
     const { 
         diceValue, isRolling, currentPlayerIndex, players, boardConfig, 
-        requestPurchase, nextTurn, localPlayerId, currentQuestion, isTokenMoving
+        requestPurchase, nextTurn, localPlayerId, currentQuestion, isTokenMoving,
+        awaitingChatGPTChoice, gameMode
     } = useGameStore();
 
-    if (diceValue === null || isRolling || currentQuestion || isTokenMoving) return null;
+    if (diceValue === null || isRolling || currentQuestion || isTokenMoving || awaitingChatGPTChoice) return null;
 
     const currentPlayer = players[currentPlayerIndex];
-    const isMyTurn = localPlayerId === (currentPlayer?.id);
+    const isMyTurn = gameMode === 'split-screen' || localPlayerId === (currentPlayer?.id);
 
     const currentSpace = boardConfig[currentPlayer.position];
     const canPurchase = currentSpace?.type === 'property' &&

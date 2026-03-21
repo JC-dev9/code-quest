@@ -6,11 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 export const ChatGPTModal = () => {
     const {
         awaitingChatGPTChoice, boardConfig, players, currentPlayerIndex,
-        localPlayerId, chatGPTChooseSpace
+        localPlayerId, chatGPTChooseSpace, gameMode
     } = useGameStore();
 
     const currentPlayer = players[currentPlayerIndex];
-    const isMyTurn = localPlayerId === currentPlayer?.id;
+    const isMyTurn = gameMode === 'split-screen' || localPlayerId === currentPlayer?.id;
 
     const validSpaces = useMemo(() => {
         return boardConfig.filter(space =>

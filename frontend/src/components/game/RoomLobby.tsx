@@ -10,11 +10,16 @@ interface RoomLobbyProps {
     roomCode: string;
     players: Array<{ id: number; color: string }>;
     isHost: boolean;
+    gameMode?: 'online' | 'split-screen';
     onStartGame: () => void;
     onLeaveRoom: () => void;
+    onAddLocalPlayer?: () => void;
 }
 
-export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom }: RoomLobbyProps) => {
+export const RoomLobby = ({ 
+    roomCode, players, isHost, gameMode = 'online', 
+    onStartGame, onLeaveRoom, onAddLocalPlayer 
+}: RoomLobbyProps) => {
     const [copied, setCopied] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
 
@@ -34,6 +39,7 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
     };
 
     const canStart = players.length >= 2;
+    const isFull = players.length >= 4;
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-zinc-950 p-4 z-50">
@@ -52,18 +58,24 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                 <CardContent className="space-y-6">
                     {/* Código da Sala */}
                     <div 
-                        onClick={copyRoomCode}
-                        className="group flex flex-col items-center justify-center p-6 bg-zinc-950 rounded-xl border border-zinc-800 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                        onClick={gameMode === 'online' ? copyRoomCode : undefined}
+                        className={`group flex flex-col items-center justify-center p-6 bg-zinc-950 rounded-xl border border-zinc-800 ${gameMode === 'online' ? 'cursor-pointer hover:border-emerald-500/50' : 'cursor-default transition-colors'}`}
                     >
-                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Código da Sala</span>
-                        <div className="text-5xl font-mono font-black tracking-[0.2em] text-zinc-100 group-hover:text-emerald-400 transition-colors">
-                            {roomCode}
+                        <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">
+                            {gameMode === 'online' ? 'Código da Sala' : 'Modo de Jogo'}
+                        </span>
+                        <div className="text-5xl font-mono font-black tracking-[0.2em] text-zinc-100 group-hover:text-emerald-400 transition-colors uppercase">
+                            {gameMode === 'online' ? roomCode : 'LOCAL'}
                         </div>
                         <div className="mt-4 flex items-center gap-2 text-sm font-medium">
-                            {copied ? (
-                                <span className="flex items-center gap-1 text-emerald-500"><Check className="w-4 h-4" /> Copiado!</span>
+                            {gameMode === 'online' ? (
+                                copied ? (
+                                    <span className="flex items-center gap-1 text-emerald-500"><Check className="w-4 h-4" /> Copiado!</span>
+                                ) : (
+                                    <span className="flex items-center gap-1 text-zinc-500"><Clipboard className="w-4 h-4" /> Copiar código</span>
+                                )
                             ) : (
-                                <span className="flex items-center gap-1 text-zinc-500"><Clipboard className="w-4 h-4" /> Copiar código</span>
+                                <span className="flex items-center gap-1 text-zinc-500">Multijogador no mesmo PC</span>
                             )}
                         </div>
                     </div>
@@ -77,7 +89,7 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                                 <Users className="w-4 h-4" /> Jogadores
                             </span>
                             <Badge variant="secondary" className="bg-zinc-800 text-zinc-300">
-                                {players.length}/2
+                                {players.length}/4
                             </Badge>
                         </div>
                         
@@ -92,7 +104,9 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                                         </Avatar>
                                         <div className="flex flex-col">
                                             <span className="text-zinc-100 font-bold">Jogador {index + 1}</span>
-                                            <span className="text-zinc-500 text-xs">{index === 0 ? 'Anfitrião' : 'Convidado'}</span>
+                                            <span className="text-zinc-500 text-xs">
+                                                {index === 0 ? 'Anfitrião' : (gameMode === 'split-screen' ? 'Jogador Local' : 'Convidado')}
+                                            </span>
                                         </div>
                                     </div>
                                     {index === 0 && (
@@ -103,11 +117,25 @@ export const RoomLobby = ({ roomCode, players, isHost, onStartGame, onLeaveRoom 
                                 </div>
                             ))}
                             
-                            {players.length < 2 && (
-                                <div className="flex items-center justify-center p-4 rounded-lg border-2 border-dashed border-zinc-800 bg-zinc-950/50">
-                                    <span className="text-zinc-500 text-sm font-medium animate-pulse">
-                                        À espera do 2º jogador...
-                                    </span>
+                            {!isFull && (
+                                <div className="flex flex-col gap-3">
+                                    {gameMode === 'split-screen' && isHost && (
+                                        <Button 
+                                            variant="outline" 
+                                            className="w-full border-dashed border-zinc-700 hover:border-emerald-500/50 hover:bg-emerald-500/5 text-zinc-400 hover:text-emerald-400"
+                                            onClick={onAddLocalPlayer}
+                                        >
+                                            <Users className="w-4 h-4 mr-2" /> Adicionar Jogador Local
+                                        </Button>
+                                    )}
+                                    <div className="flex items-center justify-center p-4 rounded-lg border-2 border-dashed border-zinc-800 bg-zinc-950/50">
+                                        <span className="text-zinc-500 text-sm font-medium animate-pulse text-center">
+                                            {canStart 
+                                                ? `Mínimo atingido! Pode começar ou aguardar mais jogadores (${4 - players.length} slots livres)...`
+                                                : `À espera de mais jogadores (mínimo 2)...`
+                                            }
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         </div>

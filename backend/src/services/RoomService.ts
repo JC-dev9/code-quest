@@ -8,6 +8,7 @@ export interface Room {
     playerSockets: Set<string>;
     gameService: GameService;
     createdAt: Date;
+    mode: 'online' | 'split-screen';
 }
 
 export class RoomService {
@@ -30,7 +31,7 @@ export class RoomService {
         return code;
     }
 
-    public createRoom(hostSocketId: string): Room {
+    public createRoom(hostSocketId: string, mode: 'online' | 'split-screen' = 'online'): Room {
         const code = this.generateRoomCode();
         const gameService = new GameService();
         gameService.setRoomCode(code);
@@ -40,7 +41,8 @@ export class RoomService {
             hostSocketId,
             playerSockets: new Set([hostSocketId]),
             gameService,
-            createdAt: new Date()
+            createdAt: new Date(),
+            mode
         };
         this.rooms.set(code, room);
 
@@ -101,7 +103,8 @@ export class RoomService {
             hostSocketId: '', // Será atualizado quando o host reconectar
             playerSockets: new Set(),
             gameService,
-            createdAt: new Date(dbRoom.created_at)
+            createdAt: new Date(dbRoom.created_at),
+            mode: (gameService.getState() as any).mode || 'online'
         };
 
         this.rooms.set(code, room);

@@ -20,6 +20,7 @@ export type Player = {
 export type SpaceLevel = 'Fácil' | 'Intermédio' | 'Difícil' | 'Extremo' | 'Corner';
 export type GamePhase = 'WAITING' | 'INITIAL_ROLL' | 'PLAYING' | 'FINISHED';
 export type RoomStatus = 'WAITING' | 'PLAYING' | 'FINISHED';
+export type RoomMode = 'online' | 'split-screen';
 
 export type SpaceData = {
     id: number;
@@ -72,5 +73,6 @@ export interface GameStateData {
     gamePhase: GamePhase;
     winnerId: number | null;
     lastEvent: GameEvent | null;
-    awaitingChatGPTChoice: boolean; // Se estamos à espera que o jogador escolha casa (Chat GPT)
+    awaitingChatGPTChoice: boolean;
+    mode: RoomMode;
 }

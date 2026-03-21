@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export const QuestionModal = () => {
-    const { currentQuestion, answerQuestion, players, currentPlayerIndex, localPlayerId } = useGameStore();
+    const { currentQuestion, answerQuestion, players, currentPlayerIndex, localPlayerId, gameMode } = useGameStore();
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [showResult, setShowResult] = useState(false);
     const [isCorrect, setIsCorrect] = useState(false);
@@ -20,7 +20,8 @@ export const QuestionModal = () => {
     }, [currentQuestion]);
 
     const handleAnswer = useCallback((idx: number) => {
-        if (!currentQuestion || !players[currentPlayerIndex] || localPlayerId !== players[currentPlayerIndex]?.id || showResult || selectedAnswer !== null) return;
+        const canInteract = gameMode === 'split-screen' || localPlayerId === players[currentPlayerIndex]?.id;
+        if (!currentQuestion || !players[currentPlayerIndex] || !canInteract || showResult || selectedAnswer !== null) return;
 
         setSelectedAnswer(idx);
         const correct = idx === currentQuestion.correctIndex;
@@ -30,12 +31,12 @@ export const QuestionModal = () => {
         setTimeout(() => {
             answerQuestion(idx);
         }, 1500);
-    }, [showResult, selectedAnswer, currentQuestion?.correctIndex, answerQuestion, players, currentPlayerIndex, localPlayerId]);
+    }, [showResult, selectedAnswer, currentQuestion?.correctIndex, answerQuestion, players, currentPlayerIndex, localPlayerId, gameMode]);
 
     if (!currentQuestion) return null;
 
     const currentPlayer = players[currentPlayerIndex];
-    const isMyTurn = localPlayerId === (currentPlayer?.id);
+    const isMyTurn = gameMode === 'split-screen' || localPlayerId === (currentPlayer?.id);
 
     const getLevelConfig = () => {
         switch (currentQuestion.level) {

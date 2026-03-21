@@ -23,7 +23,9 @@ function App() {
     createRoom,
     joinRoom,
     leaveRoom,
-    startGame
+    startGame,
+    gameMode,
+    addLocalPlayer
   } = useGameStore();
 
   // Connect socket on mount
@@ -73,8 +75,10 @@ function App() {
             roomCode={roomCode || ''}
             players={players}
             isHost={isHost}
+            gameMode={gameMode}
             onStartGame={startGame}
             onLeaveRoom={leaveRoom}
+            onAddLocalPlayer={addLocalPlayer}
           />
         </motion.div>
       )}

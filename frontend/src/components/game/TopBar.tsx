@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
 export const TopBar = () => {
-    const { players, currentPlayerIndex, localPlayerId } = useGameStore();
+    const { players, currentPlayerIndex, localPlayerId, gameMode } = useGameStore();
 
     return (
         <div className="flex justify-between items-start pointer-events-auto gap-4">
@@ -31,7 +31,7 @@ export const TopBar = () => {
             <div className="flex gap-3">
                 {players.map((p, i) => {
                     const isActive = i === currentPlayerIndex;
-                    const isYou = p.id === localPlayerId;
+                    const isYou = gameMode === 'split-screen' || p.id === localPlayerId;
                     
                     return (
                         <Card 
