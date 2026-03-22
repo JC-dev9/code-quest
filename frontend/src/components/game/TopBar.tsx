@@ -1,35 +1,61 @@
 import { useGameStore } from '../../store/gameStore';
-import { Coins, User, TrendingUp, Sparkles } from 'lucide-react';
+import type { Player } from '../../store/gameStore';
+import { Coins, User, TrendingUp, Sparkles, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { ConfirmLogoutModal } from './ConfirmLogoutModal';
+import { useState } from 'react';
 
 export const TopBar = () => {
     const { players, currentPlayerIndex, localPlayerId, gameMode } = useGameStore();
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+    const handleLeave = () => {
+        setIsLogoutModalOpen(true);
+    };
 
     return (
         <div className="flex justify-between items-start pointer-events-auto gap-4">
             {/* Logo/Brand */}
-            <div className="bg-zinc-950/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-zinc-800 shadow-lg flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-1">
-                    <Sparkles className="w-5 h-5 text-indigo-400" />
-                    <h1 className="text-2xl font-black text-zinc-50 tracking-tight leading-none">
-                        CODE QUEST
-                    </h1>
+            <div className="flex flex-col gap-2">
+                <div className="bg-zinc-950/80 backdrop-blur-md px-6 py-4 rounded-2xl border border-zinc-800 shadow-lg flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="w-5 h-5 text-indigo-400" />
+                        <h1 className="text-2xl font-black text-zinc-50 tracking-tight leading-none">
+                            CODE QUEST
+                        </h1>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-[10px] tracking-widest text-zinc-500 uppercase font-bold">Monopoly Edition</p>
+                        {localPlayerId && (
+                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-0.5 px-2 rounded-full ml-3">
+                                ID: {localPlayerId}
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-widest text-zinc-500 uppercase font-bold">Monopoly Edition</p>
-                    {localPlayerId && (
-                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bg-indigo-500/10 py-0.5 px-2 rounded-full ml-3">
-                            ID: {localPlayerId}
-                        </span>
-                    )}
-                </div>
+
+                <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={handleLeave}
+                    className="w-fit bg-red-950/50 hover:bg-red-900/50 text-red-400 border border-red-900/50 backdrop-blur-md rounded-xl font-bold gap-2 text-[10px] uppercase tracking-wider px-4 h-9"
+                >
+                    <LogOut className="w-3 h-3" />
+                    Sair e Voltar ao Menu
+                </Button>
+
+                <ConfirmLogoutModal 
+                    isOpen={isLogoutModalOpen} 
+                    onClose={() => setIsLogoutModalOpen(false)} 
+                />
             </div>
 
             {/* Player Cards */}
             <div className="flex gap-3">
-                {players.map((p, i) => {
+                {players.map((p: Player, i: number) => {
                     const isActive = i === currentPlayerIndex;
                     const isYou = gameMode === 'split-screen' || p.id === localPlayerId;
                     
