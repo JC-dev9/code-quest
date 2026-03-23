@@ -452,19 +452,26 @@ export class GameService {
             space.ownerId = player.id;
             this.emitEvent('PROPERTY_BOUGHT', player.id, `🏢 ${player.displayName} comprou ${space.name} por ${space.price} DG!`, { amount: space.price });
             this.emitEvent('ANSWER_CORRECT', player.id, `✅ Resposta correta!`);
+            
+            // Requisito: verificar falência logo após a compra (caso tenha ficado com 0 moedas)
+            this.checkBankruptcy(player);
+            
+            this.currentQuestion = null;
+            this.pendingPurchaseId = null;
+            this.checkVictoryCondition();
+            this.notifyStateChange();
         } else {
-            // A compra falhou, remover o bloqueio para permitir nova tentativa
+            // A compra falhou, remover o bloqueio se necessário (embora o turno termine)
             player.purchaseAttemptUsed = false;
             this.emitEvent('ANSWER_WRONG', player.id, `❌ Resposta errada! ${player.displayName} não conseguiu comprar ${space.name}.`);
+            
+            // Requisito: Turno termina automaticamente após errar a pergunta
+            this.currentQuestion = null;
+            this.pendingPurchaseId = null;
+            this.advanceToNextPlayer();
+            this.notifyStateChange();
         }
 
-        this.currentQuestion = null;
-        this.pendingPurchaseId = null;
-
-        // Verificar condição de vitória
-        this.checkVictoryCondition();
-
-        this.notifyStateChange();
         return isCorrect;
     }
 
@@ -541,7 +548,7 @@ export class GameService {
 
     /** Verificar se um jogador entrou em falência */
     private checkBankruptcy(player: Player): void {
-        if (player.money <= 0 && player.properties.length === 0) {
+        if (player.money <= 0) {
             player.isBankrupt = true;
             player.money = 0;
             this.emitEvent('PLAYER_BANKRUPT', player.id, `💀 ${player.displayName} foi à falência!`);
